@@ -12,6 +12,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UsersModule } from '../users/users.module';
+import { PrismaModule } from '../../common/prisma.module';
 
 /**
  * AuthModule - модуль для аутентификации
@@ -20,19 +21,22 @@ import { UsersModule } from '../users/users.module';
   imports: [
     // Импортируем UsersModule, чтобы использовать UsersService
     UsersModule,
+    // Импортируем PrismaModule для работы с БД
+    PrismaModule,
     // PassportModule для работы с стратегиями
     PassportModule,
     // JwtModule для работы с JWT токенами
     JwtModule.registerAsync({
       useFactory: () => {
-        const secret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+        const secret =
+          process.env.JWT_SECRET || 'your-secret-key-change-in-production';
         const logger = new Logger('AuthModule');
         logger.log(`JwtModule регистрируется с секретом (полное): ${secret}`);
         logger.log(`JWT_SECRET длина: ${secret.length} символов`);
         return {
           secret,
           signOptions: {
-            expiresIn: '24h', // Токен действителен 24 часа
+            expiresIn: '15m', // Access token действителен 15 минут
           },
         };
       },
@@ -43,4 +47,3 @@ import { UsersModule } from '../users/users.module';
   exports: [AuthService], // Экспортируем для использования в других модулях
 })
 export class AuthModule {}
-

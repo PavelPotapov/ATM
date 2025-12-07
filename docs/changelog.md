@@ -4,6 +4,50 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/).
 
+## [2025-12-07] - Настройка Swagger и улучшение обработки ошибок
+
+### Добавлено
+- Swagger UI для интерактивной документации и тестирования API
+- Декораторы Swagger для всех контроллеров (@ApiTags, @ApiOperation, @ApiResponse)
+- Декораторы Swagger для всех DTO (@ApiProperty)
+- Настройка JWT авторизации в Swagger
+- Скрипт typecheck для проверки типов TypeScript
+- Скрипт test с флагом --verbose для подробного вывода
+
+### Изменено
+- Все endpoints документированы в Swagger
+- Swagger доступен по адресу http://localhost:3000/api
+- Исправлены HTTP коды ошибок: 401 Unauthorized вместо 500 для неавторизованных запросов
+
+### Планируется
+- Расширение функциональности Workspaces (сметы, ячейки и т.д.)
+- AdminJS для управления пользователями
+- Инициализация React frontend
+
+## [2025-12-07] - Добавление Refresh Token и Logout
+
+### Добавлено
+- Поле `refreshToken` в модель User
+- Endpoint POST /auth/refresh - обновление access token
+- Endpoint POST /auth/logout - выход из системы
+- Методы `refresh()` и `logout()` в AuthService
+- RefreshTokenDto для валидации refresh token
+- Обновлен AuthResponse - теперь включает refresh_token
+- Access token теперь действителен 15 минут (было 24 часа)
+- Refresh token действителен 7 дней
+
+### Изменено
+- AuthService теперь генерирует два токена: access (15м) и refresh (7д)
+- Refresh token сохраняется в БД для проверки при обновлении
+- Обновлена документация Swagger для новых endpoints
+- Исправлены HTTP коды ошибок (401 вместо 500)
+
+### Планируется
+- Swagger документация
+- Расширение функциональности Workspaces (сметы, ячейки и т.д.)
+- AdminJS для управления пользователями
+- Инициализация React frontend
+
 ## [2025-12-07] - Создание модуля Workspaces
 
 ### Добавлено

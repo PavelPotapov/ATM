@@ -8,10 +8,18 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class AuthResponseDto {
   @ApiProperty({
-    description: 'JWT токен для доступа к защищенным endpoints',
+    description:
+      'JWT access token для доступа к защищенным endpoints (действителен 15 минут)',
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
   })
   access_token!: string;
+
+  @ApiProperty({
+    description:
+      'JWT refresh token для обновления access token (действителен 7 дней)',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
+  refresh_token!: string;
 
   @ApiProperty({
     description: 'Данные пользователя',
@@ -21,7 +29,11 @@ export class AuthResponseDto {
       email: { type: 'string', example: 'admin@test.com' },
       firstName: { type: 'string', nullable: true, example: 'Иван' },
       lastName: { type: 'string', nullable: true, example: 'Иванов' },
-      role: { type: 'string', enum: ['ADMIN', 'MANAGER', 'WORKER'], example: 'ADMIN' },
+      role: {
+        type: 'string',
+        enum: ['ADMIN', 'MANAGER', 'WORKER'],
+        example: 'ADMIN',
+      },
     },
   })
   user!: {
@@ -33,3 +45,10 @@ export class AuthResponseDto {
   };
 }
 
+export class RefreshResponseDto {
+  @ApiProperty({
+    description: 'Новый JWT access token',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
+  access_token!: string;
+}

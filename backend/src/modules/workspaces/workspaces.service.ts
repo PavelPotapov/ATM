@@ -5,7 +5,11 @@
  * @created: 2025-12-07
  */
 
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
@@ -115,9 +119,7 @@ export class WorkspacesService {
     if (user.role !== Role.ADMIN) {
       const hasAccess = workspace.users.some((wu) => wu.userId === user.id);
       if (!hasAccess) {
-        throw new ForbiddenException(
-          'У вас нет доступа к этому workspace',
-        );
+        throw new ForbiddenException('У вас нет доступа к этому workspace');
       }
     }
 
@@ -265,9 +267,7 @@ export class WorkspacesService {
         where: { id: workspaceId },
       });
       if (!workspace) {
-        throw new NotFoundException(
-          `Workspace с ID ${workspaceId} не найден`,
-        );
+        throw new NotFoundException(`Workspace с ID ${workspaceId} не найден`);
       }
       return;
     }
@@ -283,10 +283,7 @@ export class WorkspacesService {
     });
 
     if (!workspaceUser) {
-      throw new ForbiddenException(
-        'У вас нет доступа к этому workspace',
-      );
+      throw new ForbiddenException('У вас нет доступа к этому workspace');
     }
   }
 }
-

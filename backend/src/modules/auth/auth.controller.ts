@@ -12,16 +12,22 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
-import { AuthService, AuthResponse } from './auth.service';
+import { AuthService, AuthResponse, RefreshResponse } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { AuthResponseDto } from './dto/auth-response.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { AuthResponseDto, RefreshResponseDto } from './dto/auth-response.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../users/types/user.types';
 
 /**
  * AuthController - контроллер для аутентификации
@@ -44,7 +50,10 @@ export class AuthController {
    */
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Вход в систему', description: 'Аутентификация пользователя и получение JWT токена' })
+  @ApiOperation({
+    summary: 'Вход в систему',
+    description: 'Аутентификация пользователя и получение JWT токена',
+  })
   @ApiBody({ type: LoginDto })
   @ApiResponse({
     status: 200,
@@ -62,5 +71,60 @@ export class AuthController {
       `Успешный вход: ${loginDto.email}, токен: ${result.access_token.substring(0, 20)}...`,
     );
     return result;
+  }
+
+  /**
+   * POST /auth/refresh
+   * Обновление access token с помощью refresh token
+   */
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Обновление токена',
+    description: 'Получение нового access token с помощью refresh token',
+  })
+  @ApiBody({ type: RefreshTokenDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Новый access token успешно получен',
+    type: RefreshResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Невалидный или истекший refresh token',
+  })
+  async refresh(
+    @Body() refreshTokenDto: RefreshTokenDto,
+  ): Promise<RefreshResponse> {
+    this.logger.log('Попытка обновления токена');
+    return this.authService.refresh(refreshTokenDto.refresh_token);
+  }
+
+  /**
+   * POST /auth/logout
+   * Выход из системы
+   */
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Выход из системы',
+    description: 'Выход из системы и удаление refresh token',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Успешный выход из системы',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  async logout(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<{ message: string }> {
+    this.logger.log(`Выход пользователя: ${user.email}`);
+    await this.authService.logout(user.id);
+    return { message: 'Успешный выход из системы' };
   }
 }

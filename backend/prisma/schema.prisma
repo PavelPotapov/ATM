@@ -32,12 +32,13 @@ enum Role {
 
 // Пользователь системы
 model User {
-  id        String   @id @default(uuid()) // Уникальный ID (UUID)
-  email     String   @unique // Email - уникальный, используется для входа
-  password  String   // Хэш пароля (будем хэшировать, не храним в открытом виде)
-  firstName String?  // Имя (опционально)
-  lastName  String?  // Фамилия (опционально)
-  role      Role     @default(WORKER) // Роль пользователя, по умолчанию WORKER
+  id           String   @id @default(uuid()) // Уникальный ID (UUID)
+  email        String   @unique // Email - уникальный, используется для входа
+  password     String   // Хэш пароля (будем хэшировать, не храним в открытом виде)
+  firstName    String?  // Имя (опционально)
+  lastName     String?  // Фамилия (опционально)
+  role         Role     @default(WORKER) // Роль пользователя, по умолчанию WORKER
+  refreshToken String?  // Refresh token для обновления access token (опционально)
   
   // Связи с другими таблицами
   workspaces WorkspaceUser[] // Связь многие-ко-многим с Workspace

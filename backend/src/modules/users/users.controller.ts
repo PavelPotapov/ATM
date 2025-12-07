@@ -28,7 +28,6 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 /**
  * UsersController - контроллер для работы с пользователями
@@ -59,7 +58,10 @@ export class UsersController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Создание пользователя', description: 'Регистрация нового пользователя в системе' })
+  @ApiOperation({
+    summary: 'Создание пользователя',
+    description: 'Регистрация нового пользователя в системе',
+  })
   @ApiResponse({
     status: 201,
     description: 'Пользователь успешно создан',
@@ -80,7 +82,10 @@ export class UsersController {
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Получение всех пользователей', description: 'Возвращает список всех пользователей системы' })
+  @ApiOperation({
+    summary: 'Получение всех пользователей',
+    description: 'Возвращает список всех пользователей системы',
+  })
   @ApiResponse({
     status: 200,
     description: 'Список пользователей',
@@ -89,8 +94,7 @@ export class UsersController {
     status: 401,
     description: 'Требуется аутентификация',
   })
-  findAll(@CurrentUser() user: any) {
-    // user - текущий аутентифицированный пользователь
+  findAll() {
     return this.usersService.findAll();
   }
 

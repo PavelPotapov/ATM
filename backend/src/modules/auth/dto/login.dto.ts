@@ -5,7 +5,6 @@
  * @created: 2025-12-07
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { IsEmail, IsString, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 

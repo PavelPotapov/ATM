@@ -52,16 +52,44 @@
 
 ## Задача: Модуль Workspaces
 
-- **Статус**: Не начата
+- **Статус**: Завершена
 - **Описание**: Создание модуля для управления рабочими пространствами (строительными проектами)
 - **Шаги выполнения**:
-  - [ ] Создание WorkspacesController (CRUD endpoints)
-  - [ ] Создание WorkspacesService (бизнес-логика)
-  - [ ] Создание DTO для Workspace (CreateWorkspaceDto, UpdateWorkspaceDto)
-  - [ ] Реализация связи с пользователями (WorkspaceUser)
-  - [ ] Добавление проверки прав доступа (роли)
-  - [ ] Тестирование API endpoints
+  - [x] Создание WorkspacesController (CRUD endpoints)
+  - [x] Создание WorkspacesService (бизнес-логика)
+  - [x] Создание DTO для Workspace (CreateWorkspaceDto, UpdateWorkspaceDto)
+  - [x] Реализация связи с пользователями (WorkspaceUser)
+  - [x] Добавление проверки прав доступа (роли)
+  - [x] Тестирование API endpoints
+  - [x] Добавление Swagger документации
 - **Зависимости**: Модуль Auth и Users
+
+## Задача: Swagger документация
+
+- **Статус**: Завершена
+- **Описание**: Настройка Swagger для интерактивной документации и тестирования API
+- **Шаги выполнения**:
+  - [x] Установка @nestjs/swagger
+  - [x] Настройка SwaggerModule в main.ts
+  - [x] Добавление декораторов к контроллерам (@ApiTags, @ApiOperation, @ApiResponse)
+  - [x] Добавление декораторов к DTO (@ApiProperty)
+  - [x] Настройка JWT авторизации в Swagger
+  - [x] Тестирование в Swagger UI
+- **Зависимости**: Все модули должны быть готовы
+
+## Задача: Refresh Token и Logout
+
+- **Статус**: Завершена
+- **Описание**: Добавление refresh token механизма и logout функциональности
+- **Шаги выполнения**:
+  - [x] Добавление поля refreshToken в модель User
+  - [x] Обновление AuthService для генерации refresh token
+  - [x] Создание метода refresh() для обновления access token
+  - [x] Создание метода logout() для удаления refresh token
+  - [x] Добавление endpoints POST /auth/refresh и POST /auth/logout
+  - [x] Обновление типов и DTO
+  - [x] Исправление HTTP кодов ошибок (401 вместо 500)
+- **Зависимости**: Модуль Auth
 
 ## Задача: AdminJS интеграция
 
