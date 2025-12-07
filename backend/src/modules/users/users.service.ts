@@ -10,6 +10,7 @@ import { PrismaService } from '../../common/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Role } from '@prisma/client';
+import { hashPassword } from '../../common/utils/password.util';
 
 /**
  * UsersService - сервис для работы с пользователями
@@ -31,9 +32,14 @@ export class UsersService {
    * @returns созданный пользователь (без пароля)
    */
   async create(createUserDto: CreateUserDto) {
-    // TODO: Хэшировать пароль перед сохранением (bcrypt)
+    // Хэшируем пароль перед сохранением
+    const hashedPassword = await hashPassword(createUserDto.password);
+
     const user = await this.prisma.user.create({
-      data: createUserDto,
+      data: {
+        ...createUserDto,
+        password: hashedPassword, // Сохраняем хэш вместо открытого пароля
+      },
       select: {
         id: true,
         email: true,
@@ -103,11 +109,15 @@ export class UsersService {
     // Проверяем, существует ли пользователь
     await this.findOne(id);
 
-    // TODO: Если обновляется пароль, нужно его хэшировать
+    // Если обновляется пароль, хэшируем его
+    const updateData = { ...updateUserDto };
+    if (updateData.password) {
+      updateData.password = await hashPassword(updateData.password);
+    }
 
     return this.prisma.user.update({
       where: { id },
-      data: updateUserDto,
+      data: updateData,
       select: {
         id: true,
         email: true,
