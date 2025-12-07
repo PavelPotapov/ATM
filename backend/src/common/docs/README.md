@@ -39,6 +39,29 @@ import {
 } from '../../common/utils/password.util';
 ```
 
+### Конфигурация
+
+#### swagger.config.ts
+
+Настройка Swagger для API документации:
+
+- `setupSwagger(app: INestApplication)` - настраивает Swagger UI для приложения
+
+**Использование:**
+
+```typescript
+import { setupSwagger } from './common/config/swagger.config';
+
+// В main.ts
+setupSwagger(app);
+```
+
+**Особенности:**
+
+- Настраивает JWT авторизацию в Swagger
+- Сохраняет авторизацию между перезагрузками страницы
+- Доступен по адресу `/api`
+
 ## Зависимости
 
 - `@prisma/client` - Prisma Client

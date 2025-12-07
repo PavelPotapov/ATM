@@ -124,6 +124,17 @@ backend/src/
 - `hashPassword(password)` - хэширование (bcrypt, 10 раундов)
 - `comparePassword(password, hash)` - сравнение пароля с хэшем
 
+#### swagger.config.ts
+**Назначение:** Конфигурация Swagger для API документации
+
+**Функции:**
+- `setupSwagger(app)` - настраивает Swagger UI для приложения
+
+**Использование:**
+- Вызывается в `main.ts` при старте приложения
+- Настраивает JWT авторизацию в Swagger
+- Доступен по адресу `/api`
+
 ---
 
 ## Схема базы данных
