@@ -15,16 +15,19 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 /**
  * UsersController - контроллер для работы с пользователями
- * 
+ *
  * @Controller('users') - базовый путь для всех роутов: /users
- * 
+ *
  * Декораторы HTTP методов:
  * - @Get() - GET запрос
  * - @Post() - POST запрос
@@ -42,7 +45,7 @@ export class UsersController {
   /**
    * POST /users
    * Создание нового пользователя
-   * 
+   *
    * @Body() - данные из тела запроса
    * @Body() createUserDto - автоматически валидируется через CreateUserDto
    */
@@ -55,19 +58,24 @@ export class UsersController {
   /**
    * GET /users
    * Получение списка всех пользователей
+   * Требует аутентификации
    */
   @Get()
-  findAll() {
+  @UseGuards(JwtAuthGuard)
+  findAll(@CurrentUser() user: any) {
+    // user - текущий аутентифицированный пользователь
     return this.usersService.findAll();
   }
 
   /**
    * GET /users/:id
    * Получение пользователя по ID
-   * 
+   * Требует аутентификации
+   *
    * @Param('id') - параметр из URL пути
    */
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
@@ -75,8 +83,10 @@ export class UsersController {
   /**
    * PATCH /users/:id
    * Обновление пользователя
+   * Требует аутентификации
    */
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(id, updateUserDto);
   }
@@ -84,11 +94,12 @@ export class UsersController {
   /**
    * DELETE /users/:id
    * Удаление пользователя
+   * Требует аутентификации
    */
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT) // 204 No Content
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
 }
-

@@ -11,7 +11,7 @@ import { UsersController } from './users.controller';
 
 /**
  * UsersModule - модуль для работы с пользователями
- * 
+ *
  * Модуль в NestJS - это способ организации кода:
  * - Объединяет Controller и Service
  * - Управляет зависимостями (Dependency Injection)
@@ -20,7 +20,6 @@ import { UsersController } from './users.controller';
 @Module({
   controllers: [UsersController], // Контроллеры модуля
   providers: [UsersService], // Сервисы модуля
-  exports: [UsersService], // Экспортируем, если нужно использовать в других модулях
+  exports: [UsersService], // Экспортируем для использования в AuthModule
 })
 export class UsersModule {}
-

@@ -9,8 +9,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Role } from '@prisma/client';
+// import { Role } from '@prisma/client';
 import { hashPassword } from '../../common/utils/password.util';
+import { UserWithoutPassword, UserWithPassword } from './types/user.types';
 
 /**
  * UsersService - сервис для работы с пользователями
@@ -31,7 +32,7 @@ export class UsersService {
    * @param createUserDto - данные для создания пользователя
    * @returns созданный пользователь (без пароля)
    */
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto): Promise<UserWithoutPassword> {
     // Хэшируем пароль перед сохранением
     const hashedPassword = await hashPassword(createUserDto.password);
 
@@ -59,7 +60,7 @@ export class UsersService {
    * Получение всех пользователей
    * @returns список всех пользователей
    */
-  async findAll() {
+  async findAll(): Promise<UserWithoutPassword[]> {
     return this.prisma.user.findMany({
       select: {
         id: true,
@@ -74,11 +75,23 @@ export class UsersService {
   }
 
   /**
+   * Поиск пользователя по email (для аутентификации)
+   * @param email - email пользователя
+   * @returns пользователь с паролем (для проверки) или null
+   */
+  async findByEmail(email: string): Promise<UserWithPassword | null> {
+    return this.prisma.user.findUnique({
+      where: { email },
+      // Включаем password для проверки при аутентификации
+    });
+  }
+
+  /**
    * Получение пользователя по ID
    * @param id - ID пользователя
    * @returns пользователь или ошибка 404
    */
-  async findOne(id: string) {
+  async findOne(id: string): Promise<UserWithoutPassword> {
     const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
@@ -105,7 +118,10 @@ export class UsersService {
    * @param updateUserDto - данные для обновления
    * @returns обновленный пользователь
    */
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<UserWithoutPassword> {
     // Проверяем, существует ли пользователь
     await this.findOne(id);
 

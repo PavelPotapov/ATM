@@ -33,15 +33,20 @@
 
 ## Задача: Аутентификация и авторизация (JWT)
 
-- **Статус**: Не начата
+- **Статус**: В процессе
 - **Описание**: Добавление системы аутентификации с JWT токенами для защиты API
 - **Шаги выполнения**:
-  - [ ] Установка @nestjs/jwt и @nestjs/passport
-  - [ ] Создание модуля Auth (login, register)
-  - [ ] Настройка JWT стратегии
-  - [ ] Создание Guards для защиты endpoints
-  - [ ] Добавление декоратора @CurrentUser для получения текущего пользователя
-  - [ ] Тестирование
+  - [ ] Установка зависимостей (@nestjs/jwt, @nestjs/passport, passport, passport-jwt)
+  - [ ] Создание модуля Auth
+  - [ ] Создание DTO для login (LoginDto)
+  - [ ] Создание AuthService (методы login, validateUser)
+  - [ ] Настройка JWT модуля (JwtModule)
+  - [ ] Создание JWT стратегии (JwtStrategy)
+  - [ ] Создание AuthController (endpoint POST /auth/login)
+  - [ ] Создание JWT Guard для защиты endpoints
+  - [ ] Создание декоратора @CurrentUser для получения текущего пользователя
+  - [ ] Защита endpoints Users (добавить @UseGuards(JwtAuthGuard))
+  - [ ] Тестирование через Postman
 - **Зависимости**: Модуль Users и хэширование паролей
 
 
