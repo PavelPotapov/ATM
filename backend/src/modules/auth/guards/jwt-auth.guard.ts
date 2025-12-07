@@ -5,7 +5,12 @@
  * @created: 2025-12-07
  */
 
-import { Injectable, ExecutionContext, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  ExecutionContext,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import { AuthenticatedUser } from '../../users/types/user.types';
@@ -57,9 +62,16 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   ): TUser {
     if (err || !user) {
       const errorMessage =
-        err?.message || info?.message || 'Неизвестная ошибка';
+        err?.message || info?.message || 'Требуется аутентификация';
       this.logger.error(`Ошибка аутентификации: ${errorMessage}`);
-      throw err || new Error('Unauthorized');
+
+      // Если это уже UnauthorizedException, пробрасываем как есть
+      if (err instanceof UnauthorizedException) {
+        throw err;
+      }
+
+      // Иначе создаем новый UnauthorizedException с правильным HTTP статусом
+      throw new UnauthorizedException(errorMessage);
     }
 
     this.logger.log(`Аутентификация успешна для пользователя: ${user.email}`);

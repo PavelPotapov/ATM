@@ -33,20 +33,62 @@
 
 ## Задача: Аутентификация и авторизация (JWT)
 
-- **Статус**: В процессе
+- **Статус**: Завершена
 - **Описание**: Добавление системы аутентификации с JWT токенами для защиты API
 - **Шаги выполнения**:
-  - [ ] Установка зависимостей (@nestjs/jwt, @nestjs/passport, passport, passport-jwt)
-  - [ ] Создание модуля Auth
-  - [ ] Создание DTO для login (LoginDto)
-  - [ ] Создание AuthService (методы login, validateUser)
-  - [ ] Настройка JWT модуля (JwtModule)
-  - [ ] Создание JWT стратегии (JwtStrategy)
-  - [ ] Создание AuthController (endpoint POST /auth/login)
-  - [ ] Создание JWT Guard для защиты endpoints
-  - [ ] Создание декоратора @CurrentUser для получения текущего пользователя
-  - [ ] Защита endpoints Users (добавить @UseGuards(JwtAuthGuard))
-  - [ ] Тестирование через Postman
+  - [x] Установка зависимостей (@nestjs/jwt, @nestjs/passport, passport, passport-jwt)
+  - [x] Создание модуля Auth
+  - [x] Создание DTO для login (LoginDto)
+  - [x] Создание AuthService (методы login, validateUser)
+  - [x] Настройка JWT модуля (JwtModule)
+  - [x] Создание JWT стратегии (JwtStrategy)
+  - [x] Создание AuthController (endpoint POST /auth/login)
+  - [x] Создание JWT Guard для защиты endpoints
+  - [x] Создание декоратора @CurrentUser для получения текущего пользователя
+  - [x] Защита endpoints Users (добавить @UseGuards(JwtAuthGuard))
+  - [x] Типизация всех компонентов (убраны any, as)
+  - [x] Тестирование через Postman
 - **Зависимости**: Модуль Users и хэширование паролей
+
+## Задача: Модуль Workspaces
+
+- **Статус**: Не начата
+- **Описание**: Создание модуля для управления рабочими пространствами (строительными проектами)
+- **Шаги выполнения**:
+  - [ ] Создание WorkspacesController (CRUD endpoints)
+  - [ ] Создание WorkspacesService (бизнес-логика)
+  - [ ] Создание DTO для Workspace (CreateWorkspaceDto, UpdateWorkspaceDto)
+  - [ ] Реализация связи с пользователями (WorkspaceUser)
+  - [ ] Добавление проверки прав доступа (роли)
+  - [ ] Тестирование API endpoints
+- **Зависимости**: Модуль Auth и Users
+
+## Задача: AdminJS интеграция
+
+- **Статус**: Не начата
+- **Описание**: Добавление AdminJS для управления пользователями и данными через веб-интерфейс
+- **Шаги выполнения**:
+  - [ ] Установка @adminjs/nestjs и зависимостей
+  - [ ] Настройка AdminJS модуля
+  - [ ] Конфигурация ресурсов (User, Workspace)
+  - [ ] Настройка аутентификации в AdminJS
+  - [ ] Настройка прав доступа по ролям
+  - [ ] Тестирование
+- **Зависимости**: Модуль Auth и Users
+
+## Задача: Инициализация Frontend
+
+- **Статус**: Не начата
+- **Описание**: Создание React приложения с TypeScript и настройка базовой структуры
+- **Шаги выполнения**:
+  - [ ] Инициализация React проекта
+  - [ ] Настройка TypeScript
+  - [ ] Настройка TanStack Router
+  - [ ] Настройка TanStack Query
+  - [ ] Настройка Zustand
+  - [ ] Настройка Tailwind CSS и ShadCN
+  - [ ] Создание базовой структуры FSD
+  - [ ] Настройка API клиента
+- **Зависимости**: Backend API должен быть готов
 
 

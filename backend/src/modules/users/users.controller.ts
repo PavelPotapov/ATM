@@ -17,6 +17,13 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -34,6 +41,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
  * - @Patch() - PATCH запрос (частичное обновление)
  * - @Delete() - DELETE запрос
  */
+@ApiTags('Пользователи')
 @Controller('users')
 export class UsersController {
   /**
@@ -50,7 +58,16 @@ export class UsersController {
    * @Body() createUserDto - автоматически валидируется через CreateUserDto
    */
   @Post()
-  @HttpCode(HttpStatus.CREATED) // Возвращаем статус 201 вместо 200
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Создание пользователя', description: 'Регистрация нового пользователя в системе' })
+  @ApiResponse({
+    status: 201,
+    description: 'Пользователь успешно создан',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Ошибка валидации данных',
+  })
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
@@ -62,6 +79,16 @@ export class UsersController {
    */
   @Get()
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Получение всех пользователей', description: 'Возвращает список всех пользователей системы' })
+  @ApiResponse({
+    status: 200,
+    description: 'Список пользователей',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
   findAll(@CurrentUser() user: any) {
     // user - текущий аутентифицированный пользователь
     return this.usersService.findAll();
@@ -76,6 +103,17 @@ export class UsersController {
    */
   @Get(':id')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Получение пользователя по ID' })
+  @ApiParam({ name: 'id', description: 'UUID пользователя' })
+  @ApiResponse({
+    status: 200,
+    description: 'Данные пользователя',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Пользователь не найден',
+  })
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
@@ -87,6 +125,17 @@ export class UsersController {
    */
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Обновление пользователя' })
+  @ApiParam({ name: 'id', description: 'UUID пользователя' })
+  @ApiResponse({
+    status: 200,
+    description: 'Пользователь успешно обновлен',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Пользователь не найден',
+  })
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(id, updateUserDto);
   }
@@ -98,7 +147,18 @@ export class UsersController {
    */
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.NO_CONTENT) // 204 No Content
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Удаление пользователя' })
+  @ApiParam({ name: 'id', description: 'UUID пользователя' })
+  @ApiResponse({
+    status: 204,
+    description: 'Пользователь успешно удален',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Пользователь не найден',
+  })
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }

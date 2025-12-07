@@ -4,6 +4,64 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/).
 
+## [2025-12-07] - Создание модуля Workspaces
+
+### Добавлено
+- Модуль Workspaces с полным CRUD функционалом
+- WorkspacesController с защищенными endpoints:
+  - POST /workspaces - создание workspace
+  - GET /workspaces - получение списка workspace пользователя
+  - GET /workspaces/:id - получение workspace с пользователями
+  - PATCH /workspaces/:id - обновление workspace
+  - DELETE /workspaces/:id - удаление workspace
+  - POST /workspaces/:id/users - добавление пользователя в workspace
+  - DELETE /workspaces/:id/users/:userId - удаление пользователя из workspace
+- WorkspacesService с бизнес-логикой:
+  - Создание workspace с автоматическим добавлением создателя
+  - Проверка прав доступа (ADMIN видит все, остальные - только свои)
+  - Управление участниками workspace
+- DTO для валидации:
+  - CreateWorkspaceDto
+  - UpdateWorkspaceDto
+  - AddUserToWorkspaceDto
+- Типы для Workspace (WorkspaceWithTimestamps, WorkspaceWithUsers)
+
+### Изменено
+- Обновлен AppModule для подключения WorkspacesModule
+- Все endpoints Workspaces защищены JWT Guard
+
+### Планируется
+- Расширение функциональности Workspaces (сметы, ячейки и т.д.)
+- AdminJS для управления пользователями
+- Инициализация React frontend
+
+## [2025-12-07] - Реализация JWT аутентификации и улучшение типизации
+
+### Добавлено
+- Модуль Auth с JWT аутентификацией
+- AuthService с методами login и validateUser
+- JwtStrategy для проверки токенов
+- JwtAuthGuard для защиты endpoints
+- Декоратор @CurrentUser для получения текущего пользователя
+- Endpoint POST /auth/login
+- Типы пользователей в модуле users (AuthenticatedUser, UserWithoutPassword, UserWithPassword)
+- Базовая типизация с использованием наследования типов
+
+### Изменено
+- Все endpoints Users защищены JWT Guard (кроме POST /users для регистрации)
+- Улучшена типизация: убраны все `any` и `as`, добавлена строгая типизация
+- Типы пользователей вынесены в модуль users с использованием базовых типов
+- Обновлена документация (tasktracker.md, changelog.md)
+
+### Исправлено
+- Проблема с JWT_SECRET при создании и проверке токенов (использован registerAsync)
+- Добавлено логирование для отладки аутентификации
+
+### Планируется
+- Модуль Workspaces
+- AdminJS для управления пользователями
+- Инициализация React frontend
+
 ## [2025-12-07] - Добавление хэширования паролей
 
 ### Добавлено
