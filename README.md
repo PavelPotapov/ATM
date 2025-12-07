@@ -54,9 +54,17 @@ ATM/
 
 ## Документация
 
+### Общая документация
 - [Архитектура проекта](./docs/project.md)
+- [Обзор модулей Backend](./docs/backend-modules.md)
 - [Changelog](./docs/changelog.md)
 - [Task Tracker](./docs/tasktracker.md)
+
+### Документация модулей
+- [Auth Module](./backend/src/modules/auth/docs/README.md) - Аутентификация и авторизация
+- [Users Module](./backend/src/modules/users/docs/README.md) - Управление пользователями
+- [Workspaces Module](./backend/src/modules/workspaces/docs/README.md) - Рабочие пространства
+- [Common Module](./backend/src/common/docs/README.md) - Общие модули и утилиты
 
 ## Разработка
 

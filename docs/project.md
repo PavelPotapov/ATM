@@ -25,27 +25,42 @@ ATM (Application for Technical Management) - fullstack приложение дл
 
 ### Структура модулей
 
-Backend следует принципам Domain-Driven Design (DDD):
+Backend использует модульную архитектуру NestJS:
 
 ```
 backend/src/
 ├── modules/
 │   ├── {moduleName}/
-│   │   ├── application/    # Use cases, сервисы приложения
-│   │   ├── domain/         # Бизнес-логика, entities
-│   │   ├── infrastructure/ # Реализация (репозитории, внешние сервисы)
-│   │   └── docs/           # Документация модуля
-├── common/                 # Общие утилиты, guards, interceptors
-└── main.ts                 # Точка входа
+│   │   ├── {moduleName}.controller.ts  # HTTP endpoints
+│   │   ├── {moduleName}.service.ts      # Бизнес-логика
+│   │   ├── {moduleName}.module.ts      # Конфигурация модуля
+│   │   ├── dto/                         # Data Transfer Objects
+│   │   ├── types/                       # TypeScript типы
+│   │   ├── guards/                      # Guards для защиты endpoints
+│   │   ├── strategies/                  # Passport стратегии
+│   │   ├── decorators/                  # Кастомные декораторы
+│   │   └── docs/                        # Документация модуля
+├── common/                               # Общие модули и утилиты
+│   ├── prisma.module.ts                 # Глобальный Prisma модуль
+│   ├── prisma.service.ts                # Сервис для работы с БД
+│   └── utils/                            # Утилиты (password.util.ts)
+└── main.ts                               # Точка входа
 ```
 
-### Основные модули (планируемые)
+**Подробная документация модулей:** см. `docs/backend-modules.md`
 
-1. **Auth** - аутентификация и авторизация
-2. **Users** - управление пользователями
-3. **Workspaces** - управление рабочими пространствами (проектами)
-4. **Estimates** - управление сметами
-5. **Cells** - управление ячейками таблиц смет
+### Основные модули
+
+1. **Auth** ✅ - аутентификация и авторизация (JWT, refresh token, logout)
+   - Документация: `backend/src/modules/auth/docs/README.md`
+2. **Users** ✅ - управление пользователями (CRUD)
+   - Документация: `backend/src/modules/users/docs/README.md`
+3. **Workspaces** ✅ - управление рабочими пространствами (проектами)
+   - Документация: `backend/src/modules/workspaces/docs/README.md`
+4. **Estimates** ⏳ - управление сметами (планируется)
+5. **Cells** ⏳ - управление ячейками таблиц смет (планируется)
+
+**Обзор всех модулей:** `docs/backend-modules.md`
 
 ## Архитектура Frontend
 
@@ -93,8 +108,15 @@ Backend предоставляет REST API для взаимодействия 
 
 ### Базовый URL
 ```
+http://localhost:3000
+```
+
+### Swagger документация
+```
 http://localhost:3000/api
 ```
+
+Интерактивная документация API с возможностью тестирования endpoints прямо в браузере.
 
 ## Развертывание
 
@@ -108,10 +130,14 @@ http://localhost:3000/api
 2. Настройка backend:
    ```bash
    cd backend
-   npm install
-   npx prisma migrate dev
-   npm run start:dev
+   pnpm install
+   pnpm exec prisma migrate dev
+   pnpm run start:dev
    ```
+   
+   После запуска:
+   - API: http://localhost:3000
+   - Swagger: http://localhost:3000/api
 
 3. Настройка frontend:
    ```bash

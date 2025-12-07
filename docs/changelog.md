@@ -4,6 +4,25 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/).
 
+**Для понимания структуры модулей см.:**
+- [Обзор модулей Backend](./backend-modules.md)
+- [Документация модулей](./backend-modules.md#модули)
+
+## [2025-12-07] - Документация модулей Backend
+
+### Добавлено
+- Подробная документация для каждого модуля NestJS:
+  - `backend/src/modules/auth/docs/README.md` - документация Auth модуля
+  - `backend/src/modules/users/docs/README.md` - документация Users модуля
+  - `backend/src/modules/workspaces/docs/README.md` - документация Workspaces модуля
+  - `backend/src/common/docs/README.md` - документация Common модулей
+- Обзорный документ `docs/backend-modules.md` с описанием всех модулей
+- Обновлены ссылки в README.md и project.md на документацию модулей
+
+### Изменено
+- Обновлена структура документации для быстрого понимания архитектуры
+- Добавлены ссылки на документацию модулей в основных файлах
+
 ## [2025-12-07] - Настройка Swagger и улучшение обработки ошибок
 
 ### Добавлено
