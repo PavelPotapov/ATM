@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// Генератор Prisma Client - создает типобезопасный клиент для работы с БД
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Настройка подключения к базе данных
+// В Prisma v7 URL настраивается в prisma.config.ts, а не здесь
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// ENUMS (Перечисления)
+// ============================================
+
+// Роли пользователей в системе
+enum Role {
+  ADMIN   // Администратор - полный доступ
+  MANAGER // Менеджер - управление проектами
+  WORKER  // Работник - ограниченный доступ
+}
+
+// ============================================
+// MODELS (Модели данных = таблицы в БД)
+// ============================================
+
+// Пользователь системы
+model User {
+  id        String   @id @default(uuid()) // Уникальный ID (UUID)
+  email     String   @unique // Email - уникальный, используется для входа
+  password  String   // Хэш пароля (будем хэшировать, не храним в открытом виде)
+  firstName String?  // Имя (опционально)
+  lastName  String?  // Фамилия (опционально)
+  role      Role     @default(WORKER) // Роль пользователя, по умолчанию WORKER
+  
+  // Связи с другими таблицами
+  workspaces WorkspaceUser[] // Связь многие-ко-многим с Workspace
+  
+  // Timestamps (автоматически заполняются)
+  createdAt DateTime @default(now()) // Дата создания
+  updatedAt DateTime @updatedAt      // Дата последнего обновления
+
+  @@map("users") // Имя таблицы в БД
+}
+
+// Рабочее пространство (строительный проект)
+model Workspace {
+  id          String   @id @default(uuid())
+  name        String   // Название проекта
+  description String?  // Описание (опционально)
+  
+  // Связи
+  users       WorkspaceUser[] // Связь многие-ко-многим с User
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("workspaces")
+}
+
+// Промежуточная таблица для связи User ↔ Workspace (многие-ко-многим)
+// Это нужно, потому что один пользователь может работать в нескольких проектах,
+// а один проект может иметь несколько пользователей
+model WorkspaceUser {
+  id          String   @id @default(uuid())
+  userId      String   // ID пользователя
+  workspaceId String   // ID проекта
+  
+  // Связи
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Уникальная комбинация: один пользователь не может быть дважды в одном проекте
+  @@unique([userId, workspaceId])
+  @@map("workspace_users")
+}
