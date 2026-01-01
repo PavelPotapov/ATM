@@ -23,12 +23,14 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthService, AuthResponse, RefreshResponse } from './auth.service';
+import { PermissionsService } from './services/permissions.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AuthResponseDto, RefreshResponseDto } from './dto/auth-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../users/types/user.types';
+import { PermissionsList } from './types/permissions.types';
 
 /**
  * AuthController - контроллер для аутентификации
@@ -40,7 +42,10 @@ import type { AuthenticatedUser } from '../users/types/user.types';
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly permissionsService: PermissionsService,
+  ) {}
 
   /**
    * POST /auth/login
@@ -152,5 +157,45 @@ export class AuthController {
     this.logger.log(`Выход пользователя: ${user.email}`);
     await this.authService.logout(user.id);
     return { message: 'Успешный выход из системы' };
+  }
+
+  /**
+   * GET /auth/permissions
+   * Получение списка разрешений текущего пользователя
+   */
+  @Get('permissions')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Получение разрешений пользователя',
+    description:
+      'Возвращает список разрешений (permissions) для текущего пользователя на основе его роли',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Список разрешений пользователя',
+    schema: {
+      type: 'object',
+      properties: {
+        permissions: {
+          type: 'array',
+          items: {
+            type: 'string',
+            example: 'workspaces.create',
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  getPermissions(
+    @CurrentUser() user: AuthenticatedUser,
+  ): { permissions: PermissionsList } {
+    this.logger.log(`Получение разрешений для пользователя: ${user.email}`);
+    const permissions = this.permissionsService.getPermissionsByRole(user.role);
+    return { permissions };
   }
 }

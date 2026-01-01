@@ -10,6 +10,7 @@ import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { LoginPage } from '@/pages/login';
 import { WorkspacesPage } from '@/pages/workspaces';
 import { WorkspacePage } from '@/pages/workspaces/$workspaceId';
+import { UsersPage } from '@/pages/users';
 import { AuthenticatedLayout } from '@/app/layouts/AuthenticatedLayout';
 import { ROUTES } from '@/shared/config/routes.config';
 import { hasAccessToken } from '@/shared/lib/storage/jwtTokenStorage';
@@ -69,12 +70,17 @@ const workspaceDetailRoute = createRoute({
   component: WorkspacePage,
 });
 
-
+// Users route (защищенная страница)
+const usersRoute = createRoute({
+  getParentRoute: () => authenticatedLayoutRoute,
+  path: ROUTES.USERS,
+  component: UsersPage,
+});
 
 // Route tree
 const routeTree = rootRoute.addChildren([
   loginRoute,
-  authenticatedLayoutRoute.addChildren([workspacesRoute, workspaceDetailRoute]),
+  authenticatedLayoutRoute.addChildren([workspacesRoute, workspaceDetailRoute, usersRoute]),
 ]);
 
 // Create router

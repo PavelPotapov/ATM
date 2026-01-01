@@ -4,7 +4,7 @@
  * @created: 2025-01-XX
  */
 
-import { FolderKanban } from 'lucide-react';
+import { FolderKanban, Users } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -21,20 +21,36 @@ import {
 import { UserProfile } from './UserProfile';
 import { ROUTES } from '@/shared/config/routes.config';
 import { Link, useRouterState } from '@tanstack/react-router';
+import { useHasPermission, PERMISSIONS } from '@/features/permissions';
 
-const menuItems = [
+const allMenuItems = [
   {
     title: 'Workspaces',
     url: ROUTES.WORKSPACES,
     icon: FolderKanban,
+    permission: null, // Все авторизованные пользователи видят Workspaces
   },
-];
+  {
+    title: 'Пользователи',
+    url: ROUTES.USERS,
+    icon: Users,
+    permission: PERMISSIONS.USERS_VIEW,
+  },
+] as const;
 
 export function AppSidebar() {
   const router = useRouterState();
   const currentPath = router.location.pathname;
 
-  
+  // Получаем разрешения один раз
+  const hasUsersView = useHasPermission(PERMISSIONS.USERS_VIEW);
+
+  // Фильтруем пункты меню на основе разрешений
+  const menuItems = allMenuItems.filter((item) => {
+    if (item.permission === null) return true; // Доступно всем
+    if (item.permission === PERMISSIONS.USERS_VIEW) return hasUsersView;
+    return false;
+  });
 
   return (
     <Sidebar collapsible="icon">

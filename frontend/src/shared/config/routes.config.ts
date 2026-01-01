@@ -10,6 +10,7 @@ const routes = {
   ROOT: '/',
   LOGIN: '/login',
   WORKSPACES: '/workspaces',
+  USERS: '/users',
 } as const;
 
 export const ROUTES = normalizeRoutes(routes);

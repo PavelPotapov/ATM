@@ -25,6 +25,7 @@ const endpoints = {
     REFRESH: '/auth/refresh',
     LOGOUT: '/auth/logout',
     ME: '/auth/me',
+    PERMISSIONS: '/auth/permissions',
   },
   WORKSPACES: {
     LIST: '/workspaces',
@@ -45,6 +46,7 @@ export const API_ENDPOINTS = {
     REFRESH: normalizePath(`${API_PREFIX}${endpoints.AUTH.REFRESH}`),
     LOGOUT: normalizePath(`${API_PREFIX}${endpoints.AUTH.LOGOUT}`),
     ME: normalizePath(`${API_PREFIX}${endpoints.AUTH.ME}`),
+    PERMISSIONS: normalizePath(`${API_PREFIX}${endpoints.AUTH.PERMISSIONS}`),
   },
   WORKSPACES: {
     LIST: normalizePath(`${API_PREFIX}${endpoints.WORKSPACES.LIST}`),
