@@ -4,6 +4,7 @@
  * @created: 2025-01-XX
  */
 
+import { Link } from '@tanstack/react-router';
 import { useWorkspaces } from '@/entities/workspaces/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
@@ -48,20 +49,27 @@ export function WorkspacesPage() {
       {workspaces && workspaces.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {workspaces.map((workspace) => (
-            <Card key={workspace.id}>
-              <CardHeader>
-                <CardTitle>{workspace.name}</CardTitle>
-                {workspace.description && (
-                  <CardDescription>{workspace.description}</CardDescription>
-                )}
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm text-muted-foreground">
-                  <p>ID: {workspace.id}</p>
-                  <p>Создан: {new Date(workspace.createdAt).toLocaleDateString()}</p>
-                </div>
-              </CardContent>
-            </Card>
+            <Link
+              key={workspace.id}
+              to="/workspaces/$workspaceId"
+              params={{ workspaceId: workspace.id }}
+              className="block"
+            >
+              <Card className="cursor-pointer transition-colors hover:bg-accent">
+                <CardHeader>
+                  <CardTitle>{workspace.name}</CardTitle>
+                  {workspace.description && (
+                    <CardDescription>{workspace.description}</CardDescription>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <div className="text-sm text-muted-foreground">
+                    <p>ID: {workspace.id}</p>
+                    <p>Создан: {new Date(workspace.createdAt).toLocaleDateString()}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       ) : (

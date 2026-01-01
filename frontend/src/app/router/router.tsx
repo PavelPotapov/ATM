@@ -8,8 +8,8 @@
 import { createRouter, createRootRoute, createRoute, Outlet, redirect } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { LoginPage } from '@/pages/login';
-import { ExamplePage } from '@/pages/example';
 import { WorkspacesPage } from '@/pages/workspaces';
+import { WorkspacePage } from '@/pages/workspaces/$workspaceId';
 import { AuthenticatedLayout } from '@/app/layouts/AuthenticatedLayout';
 import { ROUTES } from '@/shared/config/routes.config';
 import { hasAccessToken } from '@/shared/lib/storage/jwtTokenStorage';
@@ -62,18 +62,19 @@ const workspacesRoute = createRoute({
   component: WorkspacesPage,
 });
 
-// Example route (временно, для тестирования)
-const exampleRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: ROUTES.ROOT,
-  component: ExamplePage,
+// Workspace detail route (защищенная страница)
+const workspaceDetailRoute = createRoute({
+  getParentRoute: () => authenticatedLayoutRoute,
+  path: '/workspaces/$workspaceId',
+  component: WorkspacePage,
 });
+
+
 
 // Route tree
 const routeTree = rootRoute.addChildren([
   loginRoute,
-  authenticatedLayoutRoute.addChildren([workspacesRoute]),
-  exampleRoute,
+  authenticatedLayoutRoute.addChildren([workspacesRoute, workspaceDetailRoute]),
 ]);
 
 // Create router
