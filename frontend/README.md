@@ -17,7 +17,7 @@ Frontend часть приложения ATM (Application for Technical Manageme
 ## Структура проекта (FSD - Feature-Sliced Design)
 
 ```
-frontend/ATM-front/src/
+frontend/src/
 ├── app/              # Инициализация приложения, провайдеры
 │   └── App.tsx       # Корневой компонент
 ├── pages/            # Страницы приложения

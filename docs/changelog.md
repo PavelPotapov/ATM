@@ -8,6 +8,34 @@
 - [Обзор модулей Backend](./backend-modules.md)
 - [Документация модулей](./backend-modules.md#модули)
 
+## [2025-01-XX] - Настройка API клиента и TanStack Query
+
+### Добавлено
+- Установлен и настроен axios для работы с API
+- Установлен и настроен @tanstack/react-query для управления серверным состоянием
+- Создан axios клиент (`frontend/src/shared/api/client.ts`) с:
+  - Автоматическим добавлением JWT токенов в заголовки запросов
+  - Интерцепторами для обработки ошибок и добавления метаданных
+  - Поддержкой структурированных ошибок от бэкенда
+- Создан TanStack Query client (`frontend/src/shared/api/query-client.ts`) с:
+  - Централизованной обработкой ошибок
+  - Логированием детальной информации об ошибках
+  - Подготовкой к интеграции аналитики
+- Добавлен ReactQueryDevtools для отладки в dev режиме
+- Обновлен App.tsx: добавлен QueryClientProvider
+- Создана документация модуля API (`frontend/src/shared/api/README.md`)
+
+### Изменено
+- Структура проекта: файлы frontend вынесены из `frontend/ATM-front/` в `frontend/`
+- Обновлен package.json: изменено имя пакета с `ATM-front` на `atm-frontend`
+- Обновлен README.md frontend: исправлены пути в документации
+
+### Технические детали
+- Базовый URL API: `http://localhost:3000` (настраивается через `VITE_API_URL`)
+- JWT токены берутся из `localStorage.getItem('accessToken')`
+- Query client настроен с staleTime: 5 минут, retry: 1 для queries
+- Все ошибки логируются с метаданными (URL, метод, статус код)
+
 ## [2025-12-07] - Инициализация Frontend
 
 ### Добавлено
