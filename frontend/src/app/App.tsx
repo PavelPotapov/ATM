@@ -1,12 +1,13 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { ExamplePage } from '@/pages/example';
+import { RouterProvider } from '@tanstack/react-router';
 import { queryClient } from '@/shared/api/query-client';
+import { router } from './router';
 
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ExamplePage />
+      <RouterProvider router={router} />
       {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
     </QueryClientProvider>
   );
