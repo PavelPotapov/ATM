@@ -1,8 +1,12 @@
 {
-	"dependencies": {
-		"bcrypt": "^6.0.0"
-	},
-	"devDependencies": {
-		"@types/bcrypt": "^6.0.0"
-	}
+  "name": "atm",
+  "version": "0.0.1",
+  "private": true,
+  "description": "ATM - Application for Technical Management",
+  "scripts": {
+    "dev:backend": "cd backend && pnpm run start:dev",
+    "dev:frontend": "cd frontend && pnpm run dev",
+    "build:backend": "cd backend && pnpm run build",
+    "build:frontend": "cd frontend && pnpm run build"
+  }
 }
