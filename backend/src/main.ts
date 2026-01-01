@@ -11,6 +11,14 @@ config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Настройка CORS для работы с фронтендом
+  app.enableCors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173', // URL фронтенда
+    credentials: true, // Разрешаем отправку cookies (для refresh token)
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
   // Глобальная валидация - все DTO будут автоматически валидироваться
   app.useGlobalPipes(
     new ValidationPipe({
