@@ -8,6 +8,7 @@ import { cn } from "@/shared/lib/utils";
 import { Badge } from "@/shared/ui/badge";
 import {
   Command,
+  CommandEmpty,
   CommandGroup,
   CommandItem,
   CommandList,
@@ -128,18 +129,28 @@ const MultipleSelector = React.forwardRef<
       }
     }, [value]);
 
-    // Фильтруем selectables по inputValue
-    const filteredSelectables = React.useMemo(() => {
-      if (!inputValue) return selectables;
-      return selectables.filter((option) =>
-        option.label.toLowerCase().includes(inputValue.toLowerCase())
-      );
-    }, [selectables, inputValue]);
-
     return (
       <Command
         onKeyDown={handleKeyDown}
         className={cn("overflow-visible bg-transparent", className)}
+        shouldFilter={true}
+        filter={(value, search) => {
+          // value - это значение CommandItem (option.value)
+          // search - это текст из CommandPrimitive.Input
+          const option = selectables.find((opt) => opt.value === value);
+          if (!option) {
+            // Для creatable элементов
+            if (creatable && value.startsWith('__create__')) {
+              const createValue = value.replace('__create__', '');
+              if (!search || search.trim() === '') return 0;
+              return createValue.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
+            }
+            return 0;
+          }
+          if (!search || search.trim() === '') return 1;
+          // Фильтруем по label
+          return option.label.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
+        }}
         {...props}
       >
         <div
@@ -205,39 +216,37 @@ const MultipleSelector = React.forwardRef<
             {open && (
               <div className="absolute top-0 z-50 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
                 <CommandGroup className="h-full overflow-auto max-h-64">
-                  {filteredSelectables.length > 0 ? (
-                    filteredSelectables.map((option) => {
-                      return (
-                        <CommandItem
-                          key={option.value}
-                          value={option.value}
-                          disabled={option.disable}
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
-                          onSelect={() => {
-                            handleSelect(option);
-                          }}
-                          className="cursor-pointer"
-                        >
-                          {option.label}
-                        </CommandItem>
-                      );
-                    })
-                  ) : creatable && inputValue.trim() ? (
+                  {selectables.map((option) => {
+                    return (
+                      <CommandItem
+                        key={option.value}
+                        value={option.value}
+                        disabled={option.disable}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        onSelect={() => {
+                          handleSelect(option);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        {option.label}
+                      </CommandItem>
+                    );
+                  })}
+                  {creatable && inputValue.trim() && !selectables.some(opt => opt.label.toLowerCase() === inputValue.toLowerCase()) && (
                     <CommandItem
-                      value={inputValue}
+                      value={`__create__${inputValue}`}
                       onSelect={handleCreatable}
                       className="bg-accent cursor-pointer"
                     >
                       {createGroup} "{inputValue}"
                     </CommandItem>
-                  ) : (
-                    <div className="py-6 text-center text-sm">
-                      {emptyIndicator || "No results found."}
-                    </div>
                   )}
+                  <CommandEmpty>
+                    {emptyIndicator || "No results found."}
+                  </CommandEmpty>
                 </CommandGroup>
               </div>
             )}

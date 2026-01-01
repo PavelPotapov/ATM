@@ -18,7 +18,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/shared/ui/sidebar';
-import { UserProfile } from '@/entities/user';
+import { UserProfile } from '@/entities/users';
 import { ROUTES } from '@/shared/config/routes.config';
 import { Link, useRouterState } from '@tanstack/react-router';
 import { useHasPermission, PERMISSIONS } from '@/features/permissions';

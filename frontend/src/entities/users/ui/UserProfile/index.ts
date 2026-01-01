@@ -1,6 +1,6 @@
 /**
  * @file: index.ts
- * @description: Публичный API компонента UserProfile
+ * @description: Публичный API для UserProfile
  * @created: 2025-01-XX
  */
 

@@ -19,6 +19,7 @@ import {
   AlertDialogTrigger,
 } from '@/shared/ui/alertDialog';
 import { useDeleteUser } from '@/entities/users';
+import { useUser } from '@/features/authLogin/api';
 import type { UserDto } from '@/entities/users';
 import { cvaDeleteButton, cvaDeleteIcon } from './styles/DeleteUserButton.styles';
 
@@ -29,6 +30,18 @@ interface DeleteUserButtonProps {
 export function DeleteUserButton({ user }: DeleteUserButtonProps) {
   const [open, setOpen] = useState(false);
   const { mutate: deleteUser, isPending } = useDeleteUser();
+  const currentUser = useUser();
+
+  // Проверка: нельзя удалять себя
+  const isCurrentUser = currentUser?.id === user.id;
+  
+  // Проверка: нельзя удалять админов
+  const isAdmin = user.role === 'ADMIN';
+
+  // Если это текущий пользователь или админ - не показываем кнопку
+  if (isCurrentUser || isAdmin) {
+    return null;
+  }
 
   const handleDelete = () => {
     deleteUser(user.id, {

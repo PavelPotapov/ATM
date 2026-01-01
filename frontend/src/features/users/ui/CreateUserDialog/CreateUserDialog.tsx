@@ -175,7 +175,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
             Заполните форму для создания нового пользователя в системе
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className={cvaFormContainer()}>
+        <form onSubmit={handleSubmit(onSubmit)} className={cvaFormContainer()} autoComplete="off">
           <div className={cvaFormField()}>
             <Label htmlFor="login" className={cvaFormLabel()}>
               Логин <span className="text-destructive">*</span>
@@ -183,6 +183,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
             <Input
               id="login"
               type="text"
+              autoComplete="off"
               className={cvaFormInput()}
               {...register('login', {
                 required: 'Логин обязателен для заполнения',
@@ -206,6 +207,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
                   className={cvaFormInput()}
                   placeholder="Введите пароль или сгенерируйте"
                   {...register('password', {
@@ -268,6 +270,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
             <Input
               id="firstName"
               type="text"
+              autoComplete="off"
               className={cvaFormInput()}
               {...register('firstName')}
             />
@@ -280,6 +283,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
             <Input
               id="lastName"
               type="text"
+              autoComplete="off"
               className={cvaFormInput()}
               {...register('lastName')}
             />
@@ -350,3 +354,4 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
     </Dialog>
   );
 }
+

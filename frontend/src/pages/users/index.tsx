@@ -9,7 +9,7 @@ import { useUsers, type UserDto } from '@/entities/users';
 import { DataTable, type ColumnDef } from '@/widgets/table';
 import { Badge } from '@/shared/ui/badge';
 import { useHasPermission, PERMISSIONS } from '@/features/permissions';
-import { DeleteUserButton } from './ui/DeleteUserButton';
+import { DeleteUserButton, CreateUserDialog } from '@/features/users';
 import {
   cvaContainer,
   cvaHeaderContainer,
@@ -19,7 +19,6 @@ import {
   cvaHeaderActions,
 } from './styles/UsersPage.styles';
 import { cvaActionsCell, cvaActionsHeader } from './styles/UsersPageActions.styles';
-import { CreateUserDialog } from './ui';
 
 /**
  * Форматирование роли для отображения

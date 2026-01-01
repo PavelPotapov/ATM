@@ -1,6 +1,6 @@
 /**
  * @file: index.ts
- * @description: Публичный API модуля user UI
+ * @description: Публичный API для UI компонентов users
  * @created: 2025-01-XX
  */
 
