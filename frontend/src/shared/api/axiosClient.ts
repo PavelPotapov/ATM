@@ -7,7 +7,13 @@
 
 import axios, { AxiosError } from 'axios';
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
-import { getAccessToken, setAccessToken, removeAccessToken } from '@/shared/lib/storage/jwtTokenStorage';
+import {
+  getAccessToken,
+  setAccessToken,
+  getRefreshToken,
+  setRefreshToken,
+  clearTokens,
+} from '@/shared/lib/storage/jwtTokenStorage';
 import { API_ENDPOINTS } from '@/shared/config/endpoints.config';
 import { ROUTES } from '@/shared/config/routes.config';
 
@@ -30,17 +36,30 @@ async function refreshToken(): Promise<string> {
   // Создаем новый Promise для refresh
   refreshPromise = (async () => {
     try {
-      const response = await axios.post(
+      const refreshTokenValue = getRefreshToken();
+      
+      if (!refreshTokenValue) {
+        throw new Error('Refresh token не найден');
+      }
+
+      // Отправляем refresh token в теле запроса
+      const response = await axios.post<{ access_token: string; refresh_token?: string }>(
         `${API_BASE_URL}${API_ENDPOINTS.AUTH.REFRESH}`,
-        {},
-        { withCredentials: true }
+        { refresh_token: refreshTokenValue }
       );
 
-      const { access_token } = response.data;
+      const { access_token, refresh_token } = response.data;
       setAccessToken(access_token);
+      
+      // Если бэкенд вернул новый refresh token, обновляем его
+      if (refresh_token) {
+        setRefreshToken(refresh_token);
+      }
+      
       return access_token;
     } catch (refreshError) {
-      removeAccessToken();
+      // Очищаем все токены при ошибке refresh
+      clearTokens();
       // Редирект на страницу логина через роутер
       // Используем динамический импорт, чтобы избежать циклических зависимостей
       const { router } = await import('@/app/router');
@@ -61,7 +80,8 @@ export const apiClient: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Для работы с httpOnly cookies (refresh token)
+  // withCredentials не нужен, так как refresh token хранится в localStorage
+  // и отправляется в теле запроса
 });
 
 // Интерцептор для добавления JWT токена в заголовки

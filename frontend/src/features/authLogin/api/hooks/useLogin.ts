@@ -7,7 +7,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { login } from '../queries/login';
-import { setAccessToken } from '@/shared/lib/storage/jwtTokenStorage';
+import { setAccessToken, setRefreshToken } from '@/shared/lib/storage/jwtTokenStorage';
 import { ROUTES } from '@/shared/config/routes.config';
 import { router } from '@/app/router';
 
@@ -19,9 +19,9 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: login,
     onSuccess: (data) => {
-      // Сохраняем access token в localStorage
+      // Сохраняем access token и refresh token в localStorage
       setAccessToken(data.access_token);
-      // Refresh token хранится в httpOnly cookie на бэкенде
+      setRefreshToken(data.refresh_token);
       // Редирект на защищенную страницу workspaces
       router.navigate({ to: ROUTES.WORKSPACES });
     },
