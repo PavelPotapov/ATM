@@ -16,8 +16,10 @@ import {
   cvaTitle,
   cvaDescription,
   cvaErrorDescription,
+  cvaHeaderActions,
 } from './styles/UsersPage.styles';
 import { cvaActionsCell, cvaActionsHeader } from './styles/UsersPageActions.styles';
+import { CreateUserDialog } from './ui';
 
 /**
  * Форматирование роли для отображения
@@ -50,6 +52,7 @@ const getRoleVariant = (role: string): 'default' | 'secondary' | 'destructive' =
 export function UsersPage() {
   const { data: users, isLoading, error } = useUsers();
   const canDelete = useHasPermission(PERMISSIONS.USERS_DELETE);
+  const canCreate = useHasPermission(PERMISSIONS.USERS_CREATE);
 
   const columns = useMemo<ColumnDef<UserDto>[]>(
     () => {
@@ -142,10 +145,17 @@ export function UsersPage() {
   return (
     <div className={cvaContainer()}>
       <div className={cvaHeaderContainer()}>
-        <h1 className={cvaTitle()}>Пользователи</h1>
-        <p className={cvaDescription()}>
-          Управление пользователями системы
-        </p>
+        <div>
+          <h1 className={cvaTitle()}>Пользователи</h1>
+          <p className={cvaDescription()}>
+            Управление пользователями системы
+          </p>
+        </div>
+        {canCreate && (
+          <div className={cvaHeaderActions()}>
+            <CreateUserDialog />
+          </div>
+        )}
       </div>
 
       <DataTable

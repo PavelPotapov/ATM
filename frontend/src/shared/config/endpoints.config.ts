@@ -37,6 +37,7 @@ const endpoints = {
     LIST: '/users',
     BY_ID: (id: string) => `/users/${id}`,
     DELETE: (id: string) => `/users/${id}`,
+    CREATE: '/users',
   },
 } as const;
 
@@ -66,6 +67,7 @@ export const API_ENDPOINTS = {
       normalizePath(`${API_PREFIX}${endpoints.USERS.BY_ID(id)}`),
     DELETE: (id: string) =>
       normalizePath(`${API_PREFIX}${endpoints.USERS.DELETE(id)}`),
+    CREATE: normalizePath(`${API_PREFIX}${endpoints.USERS.CREATE}`),
   },
 } as const;
 

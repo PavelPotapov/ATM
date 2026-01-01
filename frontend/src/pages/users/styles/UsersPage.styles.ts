@@ -13,7 +13,12 @@ export const cvaContainer = cva([
 
 export const cvaHeaderContainer = cva([
   'users-page-cvaHeaderContainer',
-  'mb-6',
+  'mb-6 flex items-start justify-between gap-4',
+]);
+
+export const cvaHeaderActions = cva([
+  'users-page-cvaHeaderActions',
+  'flex items-center gap-2',
 ]);
 
 export const cvaTitle = cva([

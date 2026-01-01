@@ -67,4 +67,14 @@ export class CreateUserDto {
   @IsOptional()
   @IsEnum(Role, { message: 'Роль должна быть ADMIN, MANAGER или WORKER' })
   role?: Role;
+
+  @ApiProperty({
+    description: 'Список ID проектов для добавления пользователя',
+    example: ['workspace-id-1', 'workspace-id-2'],
+    required: false,
+    type: [String],
+  })
+  @IsOptional()
+  @IsString({ each: true, message: 'Каждый ID проекта должен быть строкой' })
+  workspaceIds?: string[];
 }

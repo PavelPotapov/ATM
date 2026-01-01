@@ -13,6 +13,7 @@ export { workspacesKeys } from './queryKeys';
 // Экспорт queries (опционально, если нужны напрямую)
 export { getWorkspaces } from './queries/getWorkspaces';
 export { getWorkspaceById } from './queries/getWorkspaceById';
+export { addUserToWorkspace } from './queries/addUserToWorkspace';
 
 // Экспорт hooks (основной способ использования)
 export { useWorkspaces } from './hooks/useWorkspaces';

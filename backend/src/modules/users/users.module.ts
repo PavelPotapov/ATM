@@ -5,9 +5,10 @@
  * @created: 2025-12-07
  */
 
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
+import { WorkspacesModule } from '../workspaces/workspaces.module';
 
 /**
  * UsersModule - модуль для работы с пользователями
@@ -20,6 +21,7 @@ import { UsersController } from './users.controller';
 @Module({
   controllers: [UsersController], // Контроллеры модуля
   providers: [UsersService], // Сервисы модуля
+  imports: [forwardRef(() => WorkspacesModule)],
   exports: [UsersService], // Экспортируем для использования в AuthModule
 })
 export class UsersModule {}

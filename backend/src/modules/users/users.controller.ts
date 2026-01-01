@@ -28,6 +28,8 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthenticatedUser } from './types/user.types';
 
 /**
  * UsersController - контроллер для работы с пользователями
@@ -57,10 +59,13 @@ export class UsersController {
    * @Body() createUserDto - автоматически валидируется через CreateUserDto
    */
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Создание пользователя',
-    description: 'Регистрация нового пользователя в системе',
+    description:
+      'Регистрация нового пользователя в системе. Требует аутентификации. Можно указать список проектов для автоматического добавления пользователя.',
   })
   @ApiResponse({
     status: 201,
@@ -70,8 +75,15 @@ export class UsersController {
     status: 400,
     description: 'Ошибка валидации данных',
   })
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  create(
+    @Body() createUserDto: CreateUserDto,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    return this.usersService.create(createUserDto, currentUser);
   }
 
   /**

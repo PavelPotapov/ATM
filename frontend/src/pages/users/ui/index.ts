@@ -5,3 +5,4 @@
  */
 
 export { DeleteUserButton } from './DeleteUserButton';
+export { CreateUserDialog } from './CreateUserDialog';
