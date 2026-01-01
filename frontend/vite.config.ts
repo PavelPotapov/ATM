@@ -17,4 +17,8 @@ export default defineConfig({
       "@/shared": path.resolve(__dirname, "./src/shared"),
     },
   },
+  build: {
+    outDir: '../backend/dist/public', // Собираем фронтенд в dist/public (рядом с main.js)
+    emptyOutDir: true, // Очищаем папку перед сборкой
+  },
 })
