@@ -7,16 +7,19 @@
 
 import { INestApplication } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { API_VERSION, getApiPrefix } from './api.config';
 
 /**
  * Настраивает Swagger для приложения
  * @param app - Экземпляр NestJS приложения
  */
 export function setupSwagger(app: INestApplication): void {
+  const apiPrefix = getApiPrefix();
+
   const config = new DocumentBuilder()
     .setTitle('ATM API')
     .setDescription('API для управления строительными проектами и сметами')
-    .setVersion('1.0')
+    .setVersion(API_VERSION)
     .addBearerAuth(
       {
         type: 'http',
@@ -31,7 +34,8 @@ export function setupSwagger(app: INestApplication): void {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document, {
+  // Swagger доступен по пути /api/v1 (production) или /v1 (development)
+  SwaggerModule.setup(apiPrefix, app, document, {
     swaggerOptions: {
       persistAuthorization: true, // Сохраняет авторизацию между перезагрузками
     },

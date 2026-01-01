@@ -6,6 +6,25 @@
 
 import { normalizePath } from '@/shared/lib/utils';
 
+/**
+ * Версия API (должна совпадать с backend/src/common/config/api.config.ts)
+ */
+const API_VERSION = 'v1';
+
+/**
+ * Префикс для API
+ * 
+ * import.meta.env.PROD - встроенная переменная Vite:
+ * - true в production (когда запускается `vite build`)
+ * - false в development (когда запускается `vite dev`)
+ * 
+ * Не требует настройки в .env, работает автоматически.
+ * 
+ * Production: /api/v1
+ * Development: /v1
+ */
+const API_PREFIX = import.meta.env.PROD ? `/api/${API_VERSION}` : `/${API_VERSION}`;
+
 const endpoints = {
   AUTH: {
     LOGIN: '/auth/login',
@@ -24,22 +43,28 @@ const endpoints = {
   },
 } as const;
 
-// Нормализуем строковые константы
+// Нормализуем строковые константы и добавляем префикс
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: normalizePath(endpoints.AUTH.LOGIN),
-    REFRESH: normalizePath(endpoints.AUTH.REFRESH),
-    LOGOUT: normalizePath(endpoints.AUTH.LOGOUT),
+    LOGIN: normalizePath(`${API_PREFIX}${endpoints.AUTH.LOGIN}`),
+    REFRESH: normalizePath(`${API_PREFIX}${endpoints.AUTH.REFRESH}`),
+    LOGOUT: normalizePath(`${API_PREFIX}${endpoints.AUTH.LOGOUT}`),
   },
   WORKSPACES: {
-    LIST: normalizePath(endpoints.WORKSPACES.LIST),
-    BY_ID: (id: string) => normalizePath(endpoints.WORKSPACES.BY_ID(id)),
-    ADD_USER: (id: string) => normalizePath(endpoints.WORKSPACES.ADD_USER(id)),
-    REMOVE_USER: (id: string, userId: string) => normalizePath(endpoints.WORKSPACES.REMOVE_USER(id, userId)),
+    LIST: normalizePath(`${API_PREFIX}${endpoints.WORKSPACES.LIST}`),
+    BY_ID: (id: string) =>
+      normalizePath(`${API_PREFIX}${endpoints.WORKSPACES.BY_ID(id)}`),
+    ADD_USER: (id: string) =>
+      normalizePath(`${API_PREFIX}${endpoints.WORKSPACES.ADD_USER(id)}`),
+    REMOVE_USER: (id: string, userId: string) =>
+      normalizePath(
+        `${API_PREFIX}${endpoints.WORKSPACES.REMOVE_USER(id, userId)}`,
+      ),
   },
   USERS: {
-    LIST: normalizePath(endpoints.USERS.LIST),
-    BY_ID: (id: string) => normalizePath(endpoints.USERS.BY_ID(id)),
+    LIST: normalizePath(`${API_PREFIX}${endpoints.USERS.LIST}`),
+    BY_ID: (id: string) =>
+      normalizePath(`${API_PREFIX}${endpoints.USERS.BY_ID(id)}`),
   },
 } as const;
 

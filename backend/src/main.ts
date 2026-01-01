@@ -4,12 +4,17 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { config } from 'dotenv';
 import { setupSwagger } from './common/config/swagger.config';
+import { getApiPrefix } from './common/config/api.config';
+import { isSpaRoute } from './common/utils/request.util';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
+import type { Request, Response, NextFunction } from 'express';
 
 // Загружаем переменные окружения из .env файла
 config();
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Настройка CORS для работы с фронтендом
   app.enableCors({
@@ -28,13 +33,42 @@ async function bootstrap() {
     }),
   );
 
-  // Настройка Swagger
+  // Устанавливаем глобальный префикс для API с версионированием
+  // Production: /api/v1
+  // Development: /v1 (или можно настроить иначе)
+  const apiPrefix = getApiPrefix();
+  app.setGlobalPrefix(apiPrefix);
+
+  // Настройка Swagger (должна быть после setGlobalPrefix)
   setupSwagger(app);
+
+  // В production: отдаем статические файлы фронтенда
+  if (process.env.NODE_ENV === 'production') {
+    // В production __dirname = dist/src, поэтому public будет в dist/public
+    const publicPath = join(__dirname, '..', 'public');
+
+    // Отдаем статические файлы (JS, CSS, изображения и т.д.)
+    app.useStaticAssets(publicPath, {
+      index: false, // Не используем index.html напрямую
+    });
+
+    // SPA fallback: все не-API запросы отдаем index.html
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      if (isSpaRoute(req)) {
+        res.sendFile(join(publicPath, 'index.html'));
+      } else {
+        next();
+      }
+    });
+  }
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
   console.log(`🚀 Приложение запущено на http://localhost:${port}`);
-  console.log(`📚 Swagger документация: http://localhost:${port}/api`);
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`📦 Статические файлы отдаются из папки dist/public`);
+  }
+  console.log(`📚 Swagger документация: http://localhost:${port}/${apiPrefix}`);
 }
 
 void bootstrap();
