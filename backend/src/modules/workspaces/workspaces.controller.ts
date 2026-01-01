@@ -143,15 +143,19 @@ export class WorkspacesController {
 
   /**
    * DELETE /workspaces/:id
-   * Удаление workspace
+   * Мягкое удаление workspace (soft delete)
    */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Удаление workspace' })
+  @ApiOperation({
+    summary: 'Мягкое удаление workspace',
+    description:
+      'Workspace помечается как удаленный, но остается в БД для восстановления',
+  })
   @ApiParam({ name: 'id', description: 'UUID workspace' })
   @ApiResponse({
     status: 204,
-    description: 'Workspace успешно удален',
+    description: 'Workspace успешно удален (soft delete)',
   })
   @ApiResponse({
     status: 403,
@@ -162,6 +166,87 @@ export class WorkspacesController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     await this.workspacesService.remove(id, user);
+  }
+
+  /**
+   * DELETE /workspaces/:id/permanent
+   * Принудительное удаление workspace (hard delete)
+   * Только для ADMIN
+   */
+  @Delete(':id/permanent')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Принудительное удаление workspace',
+    description:
+      'Окончательное удаление workspace из БД. Доступно только администратору',
+  })
+  @ApiParam({ name: 'id', description: 'UUID workspace' })
+  @ApiResponse({
+    status: 204,
+    description: 'Workspace окончательно удален',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Только администратор может принудительно удалять workspace',
+  })
+  async permanentlyDelete(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    await this.workspacesService.permanentlyDelete(id, user);
+  }
+
+  /**
+   * POST /workspaces/:id/restore
+   * Восстановление workspace из корзины
+   */
+  @Post(':id/restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Восстановление workspace',
+    description: 'Восстанавливает удаленный workspace из корзины',
+  })
+  @ApiParam({ name: 'id', description: 'UUID workspace' })
+  @ApiResponse({
+    status: 200,
+    description: 'Workspace успешно восстановлен',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Нет доступа к workspace',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Workspace не найден',
+  })
+  restore(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.workspacesService.restore(id, user);
+  }
+
+  /**
+   * GET /workspaces/:id/history
+   * Получение истории изменений workspace
+   */
+  @Get(':id/history')
+  @ApiOperation({
+    summary: 'История изменений workspace',
+    description: 'Возвращает список всех изменений workspace',
+  })
+  @ApiParam({ name: 'id', description: 'UUID workspace' })
+  @ApiResponse({
+    status: 200,
+    description: 'История изменений workspace',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Нет доступа к workspace',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Workspace не найден',
+  })
+  getHistory(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.workspacesService.getHistory(id, user);
   }
 
   /**

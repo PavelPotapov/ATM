@@ -42,6 +42,7 @@ model User {
   
   // Связи с другими таблицами
   workspaces WorkspaceUser[] // Связь многие-ко-многим с Workspace
+  workspaceHistory WorkspaceHistory[] // История изменений workspace
   
   // Timestamps (автоматически заполняются)
   createdAt DateTime @default(now()) // Дата создания
@@ -55,9 +56,11 @@ model Workspace {
   id          String   @id @default(uuid())
   name        String   // Название проекта
   description String?  // Описание (опционально)
+  deletedAt   DateTime? // Дата мягкого удаления (soft delete)
   
   // Связи
   users       WorkspaceUser[] // Связь многие-ко-многим с User
+  history     WorkspaceHistory[] // История изменений
   
   // Timestamps
   createdAt   DateTime @default(now())
@@ -85,4 +88,28 @@ model WorkspaceUser {
   // Уникальная комбинация: один пользователь не может быть дважды в одном проекте
   @@unique([userId, workspaceId])
   @@map("workspace_users")
+}
+
+// История изменений workspace (аудит)
+model WorkspaceHistory {
+  id          String   @id @default(uuid())
+  workspaceId String   // ID workspace
+  userId      String   // ID пользователя, который внес изменение
+  action      String   // Действие: CREATED, UPDATED, DELETED, USER_ADDED, USER_REMOVED
+  field       String?  // Поле, которое было изменено (name, description и т.д.)
+  oldValue    String?  // Старое значение (JSON строка для сложных объектов)
+  newValue    String?  // Новое значение (JSON строка для сложных объектов)
+  metadata    String?  // Дополнительные данные (JSON строка)
+  
+  // Связи
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId]) // Индекс для быстрого поиска по workspace
+  @@index([userId]) // Индекс для быстрого поиска по пользователю
+  @@index([action]) // Индекс для фильтрации по действию
+  @@map("workspace_history")
 }
