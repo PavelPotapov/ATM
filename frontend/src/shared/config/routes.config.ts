@@ -9,6 +9,7 @@ import { normalizeRoutes } from '@/shared/lib/utils';
 const routes = {
   ROOT: '/',
   LOGIN: '/login',
+  WORKSPACES: '/workspaces',
 } as const;
 
 export const ROUTES = normalizeRoutes(routes);
