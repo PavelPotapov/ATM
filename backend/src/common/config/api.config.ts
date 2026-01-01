@@ -17,28 +17,21 @@ export const ASSETS_PATH = '/assets';
 
 /**
  * Базовый путь для API (без версии)
- * В production: /api
- * В development: пустая строка (или можно использовать /api для единообразия)
+ * Единообразно используется /api и в development, и в production
  */
-export const API_BASE_PATH =
-  process.env.NODE_ENV === 'production' ? '/api' : '';
+export const API_BASE_PATH = '/api';
 
 /**
  * Базовый префикс API с версией
- * Production: api/v1
- * Development: v1
+ * Всегда: api/v1 (единообразно для development и production)
  */
 export const getApiPrefix = (): string => {
-  if (process.env.NODE_ENV === 'production') {
-    return `${API_BASE_PATH.slice(1)}/${API_VERSION}`; // Убираем ведущий / и добавляем версию
-  }
-  return API_VERSION;
+  return `${API_BASE_PATH.slice(1)}/${API_VERSION}`; // Убираем ведущий / и добавляем версию
 };
 
 /**
  * Полный путь API с версией (для проверки запросов)
- * Production: /api/v1
- * Development: /v1
+ * Всегда: /api/v1
  */
 export const getApiPath = (): string => {
   const prefix = getApiPrefix();

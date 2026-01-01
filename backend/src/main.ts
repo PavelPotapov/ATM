@@ -34,8 +34,7 @@ async function bootstrap() {
   );
 
   // Устанавливаем глобальный префикс для API с версионированием
-  // Production: /api/v1
-  // Development: /v1 (или можно настроить иначе)
+  // Всегда: /api/v1 (единообразно для development и production)
   const apiPrefix = getApiPrefix();
   app.setGlobalPrefix(apiPrefix);
 

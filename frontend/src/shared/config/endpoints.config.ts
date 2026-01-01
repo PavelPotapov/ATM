@@ -14,16 +14,10 @@ const API_VERSION = 'v1';
 /**
  * Префикс для API
  * 
- * import.meta.env.PROD - встроенная переменная Vite:
- * - true в production (когда запускается `vite build`)
- * - false в development (когда запускается `vite dev`)
- * 
- * Не требует настройки в .env, работает автоматически.
- * 
- * Production: /api/v1
- * Development: /v1
+ * Единообразно используется /api/v1 и в development, и в production
+ * для согласованности с бэкендом
  */
-const API_PREFIX = import.meta.env.PROD ? `/api/${API_VERSION}` : `/${API_VERSION}`;
+const API_PREFIX = `/api/${API_VERSION}`;
 
 const endpoints = {
   AUTH: {
