@@ -5,5 +5,5 @@
  */
 
 export { router } from './router';
-export { ROUTES } from './routes.config';
+export { ROUTES } from '@/shared/config/routes.config';
 

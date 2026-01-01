@@ -101,6 +101,43 @@ import { LoginForm } from '@/features/auth-login';
 Один основной компонент в одном файле.
 Мелкие подкомпоненты, используемые только внутри одного файла, можно хранить рядом в том же файле.
 
+## Именование файлов
+
+**Правило именования файлов:**
+
+- Для файлов с одним словом: используй `camelCase` (например: `utils.ts`, `config.ts`)
+- Для файлов с несколькими словами: используй `camelCase` без дефисов (например: `axiosClient.ts`, `queryClient.ts`, `jwtTokenStorage.ts`)
+- **Суффиксы через точку используются только когда контекст не ясен из папки** (опционально)
+
+**Суффиксы (опционально, когда контекст не ясен):**
+
+- **`.config.ts`** - Конфигурационные файлы (например: `endpoints.config.ts`, `routes.config.ts`)
+- **`.dto.ts`** - Data Transfer Objects (например: `workspace.dto.ts`)
+- **`.d.ts`** - Декларации типов TypeScript (например: `router.d.ts`, `global.d.ts`)
+
+**Примеры правильного именования (контекст ясен из папки):**
+
+- ✅ `LoginForm.tsx` (в `pages/login/ui/` или `shared/ui/` - компонент)
+- ✅ `useWorkspaces.ts` (в `entities/workspaces/api/hooks/` - хук)
+- ✅ `getWorkspaces.ts` (в `entities/workspaces/api/queries/` - query)
+- ✅ `cn.ts` (в `shared/lib/utils/` - утилита)
+- ✅ `axiosClient.ts` (в `shared/api/` - клиент)
+- ✅ `jwtTokenStorage.ts` (в `shared/lib/storage/` - хранилище)
+- ✅ `endpoints.config.ts` (в `shared/api/` - конфигурация, суффикс помогает различить)
+- ✅ `workspace.dto.ts` (в `entities/workspaces/api/dto/` - DTO, суффикс помогает различить)
+
+**Неправильные примеры:**
+- ❌ `axios-client.ts` (дефис вместо camelCase)
+- ❌ `query-client.ts` (дефис вместо camelCase)
+- ❌ `jwt-token-storage.ts` (дефис вместо camelCase)
+- ❌ `LoginForm.ts` (компонент должен быть `.tsx`)
+- ❌ `useWorkspaces.tsx` (хуки должны быть `.ts`)
+
+**Принцип:**
+- Если файл находится в папке, которая явно указывает на его тип (`hooks/`, `queries/`, `utils/`, `ui/`, `storage/`, `api/`), суффикс не нужен
+- Суффиксы используются для конфигураций (`.config.ts`), DTO (`.dto.ts`) и деклараций типов (`.d.ts`), когда нужно явно различить тип файла
+- Главное - консистентность в рамках проекта
+
 ## Типы и модели
 
 Типы доменных сущностей (User, Product и т.п.) хранятся в `entities/{entity}/model/`.

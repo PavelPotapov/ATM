@@ -9,7 +9,7 @@ import { createRouter, createRootRoute, createRoute, Outlet } from '@tanstack/re
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { LoginPage } from '@/pages/login';
 import { ExamplePage } from '@/pages/example';
-import { ROUTES } from './routes.config';
+import { ROUTES } from '@/shared/config/routes.config';
 
 // Root route с компонентом для devtools
 const rootRoute = createRootRoute({

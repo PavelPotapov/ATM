@@ -1,5 +1,5 @@
 /**
- * @file: query-client.ts
+ * @file: queryClient.ts
  * @description: TanStack Query client
  * @dependencies: @tanstack/react-query
  * @created: 2025-01-XX

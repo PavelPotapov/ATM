@@ -1,0 +1,475 @@
+---
+alwaysApply: true
+---
+
+# Правила использования API
+
+## Общие принципы
+
+### Технологический стек
+
+- **Axios клиент** (`shared/api/axiosClient.ts`) - для выполнения HTTP запросов
+- **TanStack Query** (`shared/api/queryClient.ts`) - для управления состоянием запросов, кеширования и синхронизации
+- **Query Key Factory** (`@lukemorales/query-key-factory`) - для типизированного управления query keys
+
+### Структура API слоя
+
+**Endpoints (константы эндпоинтов API)** находятся в `shared/api/endpoints.config.ts` - это общие константы для всех слоев.
+
+**Queries и hooks** создаются в папке `api/` внутри того слоя/слайса, который их использует:
+
+```
+shared/api/
+├── axiosClient.ts       # Базовый axios клиент
+├── queryClient.ts       # TanStack Query client
+└── endpoints.config.ts  # Константы эндпоинтов API (все маршруты)
+
+entities/workspaces/
+├── api/
+│   ├── queries/         # Функции запросов на основе axios
+│   │   ├── getWorkspaces.ts
+│   │   └── getWorkspaceById.ts
+│   ├── hooks/           # React хуки на основе TanStack Query
+│   │   ├── useWorkspaces.ts
+│   │   └── useWorkspace.ts
+│   ├── queryKeys.ts     # Query keys factory (типизированные ключи)
+│   └── index.ts         # Публичный API модуля
+├── ui/
+├── model/
+└── index.ts
+
+widgets/workspaces-list/
+├── api/
+│   ├── queries/
+│   ├── hooks/
+│   └── index.ts
+└── ui/
+
+shared/some-component/
+├── api/
+│   ├── queries/
+│   ├── hooks/
+│   └── index.ts
+└── ...
+```
+
+**Правила размещения:**
+- Если API используется в `entities/workspaces` - создавай `entities/workspaces/api/`
+- Если API используется в `widgets/workspaces-list` - создавай `widgets/workspaces-list/api/`
+- Если API используется в `shared/component` - создавай `shared/component/api/`
+- Endpoints всегда в `shared/api/endpoints.config.ts` (общие для всех)
+
+## Константы эндпоинтов
+
+**Все маршруты для запросов выносятся в константы в `shared/api/endpoints.config.ts`.**
+
+Это общий файл для всех слоев проекта:
+
+```typescript
+/**
+ * @file: shared/api/endpoints.config.ts
+ * @description: Константы эндпоинтов API
+ * @created: YYYY-MM-DD
+ */
+
+export const API_ENDPOINTS = {
+  AUTH: {
+    LOGIN: '/auth/login',
+    REFRESH: '/auth/refresh',
+    LOGOUT: '/auth/logout',
+  },
+  WORKSPACES: {
+    LIST: '/workspaces',
+    BY_ID: (id: string) => `/workspaces/${id}`,
+    ADD_USER: (id: string) => `/workspaces/${id}/users`,
+    REMOVE_USER: (id: string, userId: string) => `/workspaces/${id}/users/${userId}`,
+  },
+  USERS: {
+    LIST: '/users',
+    BY_ID: (id: string) => `/users/${id}`,
+  },
+} as const;
+```
+
+**Правила:**
+- Все эндпоинты должны быть в `API_ENDPOINTS` в `shared/api/endpoints.config.ts`
+- Для динамических путей используй функции: `API_ENDPOINTS.WORKSPACES.BY_ID(id)`
+- Импортируй константы в queries из `shared`: `import { API_ENDPOINTS } from '@/shared/api/endpoints.config'`
+- Endpoints общие для всех слоев, queries и hooks - специфичны для каждого слоя/слайса
+
+## Структура queries (функции запросов)
+
+### Паттерн для queries
+
+В папке `api/queries/` внутри соответствующего слоя/слайса создавай функции запросов на основе axios клиента.
+
+**Пример для entities/workspaces:**
+
+```typescript
+/**
+ * @file: entities/workspaces/api/queries/getWorkspaces.ts
+ * @description: Запрос для получения списка workspaces
+ * @dependencies: apiClient, API_ENDPOINTS
+ * @created: YYYY-MM-DD
+ */
+
+import { apiClient } from '@/shared/api/axios-client';
+import { API_ENDPOINTS } from '@/shared/api/endpoints.config';
+
+// Типы для ответов API
+export interface Workspace {
+  id: string;
+  name: string;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ApiResponse<T> {
+  result: T;
+  errors?: string;
+}
+
+/**
+ * Получить список workspaces пользователя
+ * @returns список workspaces
+ */
+export const getWorkspaces = async (): Promise<Workspace[]> => {
+  const response = await apiClient.get<Workspace[]>(API_ENDPOINTS.WORKSPACES.LIST);
+  return response.data;
+};
+
+/**
+ * Получить workspace по ID
+ * @param id - ID workspace
+ * @returns workspace
+ */
+export const getWorkspaceById = async (id: string): Promise<Workspace> => {
+  const response = await apiClient.get<Workspace>(API_ENDPOINTS.WORKSPACES.BY_ID(id));
+  return response.data;
+};
+```
+
+**Правила для queries:**
+- Всегда используй `apiClient` из `shared/api/axios-client`
+- Всегда используй константы из `API_ENDPOINTS` вместо строковых путей
+- Типизируй ответы через generic типы: `apiClient.get<Type>()`
+- Экспортируй типы сущностей для использования в компонентах
+- Добавляй JSDoc комментарии для функций
+- Один файл = одна функция запроса
+- Именование: глагол + сущность (`getWorkspaces`, `createWorkspace`, `updateWorkspace`)
+
+## Структура hooks (React хуки)
+
+### Паттерн для hooks
+
+В папке `api/hooks/` внутри соответствующего слоя/слайса создавай React хуки на основе TanStack Query.
+
+**Пример для entities/workspaces:**
+
+```typescript
+/**
+ * @file: entities/workspaces/api/hooks/useWorkspaces.ts
+ * @description: Хук для получения списка workspaces
+ * @dependencies: @tanstack/react-query, queries
+ * @created: YYYY-MM-DD
+ */
+
+import { useQuery } from '@tanstack/react-query';
+import { getWorkspaces } from '../queries/getWorkspaces';
+import { workspacesKeys } from '../queryKeys';
+
+/**
+ * Хук для получения списка workspaces
+ * @returns объект с данными, состоянием загрузки и ошибками
+ */
+export const useWorkspaces = () => {
+  return useQuery({
+    queryKey: workspacesKeys.list.queryKey,
+    queryFn: getWorkspaces,
+  });
+};
+```
+
+**Для мутаций:**
+
+```typescript
+/**
+ * @file: entities/workspaces/api/hooks/useCreateWorkspace.ts
+ * @description: Хук для создания workspace
+ * @dependencies: @tanstack/react-query, queries
+ * @created: YYYY-MM-DD
+ */
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createWorkspace } from '../queries/createWorkspace';
+import { workspacesKeys } from '../queryKeys';
+
+interface CreateWorkspaceParams {
+  name: string;
+  description?: string;
+}
+
+export const useCreateWorkspace = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createWorkspace,
+    onSuccess: () => {
+      // Инвалидируем кеш списка workspaces после создания
+      queryClient.invalidateQueries({ queryKey: workspacesKeys.list.queryKey });
+    },
+  });
+};
+```
+
+**Правила для hooks:**
+- Используй `useQuery` для GET запросов (чтение данных)
+- Используй `useMutation` для POST/PUT/DELETE запросов (изменение данных)
+- **Всегда используй query keys из `queryKeys.ts`** вместо хардкода: `workspacesKeys.list.queryKey`, `workspacesKeys.detail(id).queryKey`
+- Для мутаций используй `onSuccess` для инвалидации кеша связанных queries через query keys
+- Один файл = один хук
+- Именование: `use` + глагол + сущность (`useWorkspaces`, `useCreateWorkspace`)
+- Не смешивай бизнес-логику с представлением - хуки должны быть "тонкими"
+- Для сложной логики используй отдельные хуки или store (Zustand)
+
+## Query Key Factory
+
+**Для типизированного управления query keys используется библиотека `@lukemorales/query-key-factory`.**
+
+### Структура queryKeys
+
+В папке `api/` внутри соответствующего слоя/слайса создавай файл `queryKeys.ts` с типизированными ключами.
+
+**Пример для entities/workspaces:**
+
+```typescript
+/**
+ * @file: entities/workspaces/api/queryKeys.ts
+ * @description: Query keys для workspaces (типизированные ключи для TanStack Query)
+ * @dependencies: @lukemorales/query-key-factory
+ * @created: YYYY-MM-DD
+ */
+
+import { createQueryKeys } from '@lukemorales/query-key-factory';
+
+export const workspacesKeys = createQueryKeys('workspaces', {
+  list: null,
+  detail: (id: string) => [id],
+});
+```
+
+### Использование в hooks
+
+**Пример для useQuery:**
+
+```typescript
+import { useQuery } from '@tanstack/react-query';
+import { getWorkspaces } from '../queries/getWorkspaces';
+import { workspacesKeys } from '../queryKeys';
+
+export const useWorkspaces = () => {
+  return useQuery({
+    queryKey: workspacesKeys.list.queryKey,
+    queryFn: getWorkspaces,
+  });
+};
+```
+
+**Пример для useQuery с параметрами:**
+
+```typescript
+import { useQuery } from '@tanstack/react-query';
+import { getWorkspaceById } from '../queries/getWorkspaceById';
+import { workspacesKeys } from '../queryKeys';
+
+export const useWorkspace = (id: string) => {
+  return useQuery({
+    queryKey: workspacesKeys.detail(id).queryKey,
+    queryFn: () => getWorkspaceById(id),
+    enabled: !!id,
+  });
+};
+```
+
+**Пример для useMutation с инвалидацией:**
+
+```typescript
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createWorkspace } from '../queries/createWorkspace';
+import { workspacesKeys } from '../queryKeys';
+
+export const useCreateWorkspace = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createWorkspace,
+    onSuccess: () => {
+      // Инвалидируем кеш списка workspaces после создания
+      queryClient.invalidateQueries({ queryKey: workspacesKeys.list.queryKey });
+    },
+  });
+};
+```
+
+**Правила для queryKeys:**
+- Создавай файл `queryKeys.ts` в папке `api/` каждого модуля
+- Используй `createQueryKeys` из `@lukemorales/query-key-factory`
+- Для списков используй `list: null`
+- Для детальных запросов используй функции: `detail: (id: string) => [id]`
+- Всегда используй `.queryKey` при использовании в `useQuery`/`useMutation`
+- Экспортируй query keys в `api/index.ts` для использования в мутациях
+- Именование: `{entity}Keys` (например: `workspacesKeys`, `usersKeys`)
+
+**Преимущества:**
+- Типобезопасность - автодополнение и проверка типов
+- Единый источник истины - все ключи в одном месте
+- Удобная инвалидация - легко инвалидировать связанные queries
+- Защита от опечаток - TypeScript предупредит об ошибках
+
+## Работа с токенами
+
+**Хранение токенов:**
+- `accessToken` - хранится в `localStorage` (через утилиты из `shared/lib/storage`)
+- `refreshToken` - хранится в httpOnly cookie на бэкенде (управляется бэкендом)
+
+**Утилиты для работы с токенами:**
+- Используй функции из `shared/lib/storage/token-storage.ts`:
+  - `getAccessToken()` - получить access token
+  - `setAccessToken(token)` - сохранить access token
+  - `removeAccessToken()` - удалить access token
+  - `hasAccessToken()` - проверить наличие токена
+
+**Автоматическое обновление токенов:**
+- Axios клиент автоматически обрабатывает 401 ошибки
+- При 401 делается запрос на `/auth/refresh` для обновления access token
+- Refresh token отправляется автоматически через httpOnly cookie (withCredentials: true)
+- При неудачном refresh происходит редирект на страницу логина
+
+## Использование в компонентах
+
+**Пример использования хука:**
+
+```typescript
+// Если хук в entities/workspaces
+import { useWorkspaces } from '@/entities/workspaces/api/hooks/useWorkspaces';
+
+// Если хук в widgets/workspaces-list
+import { useWorkspaces } from '@/widgets/workspaces-list/api/hooks/useWorkspaces';
+
+function WorkspacesList() {
+  const { data: workspaces, isLoading, error } = useWorkspaces();
+
+  if (isLoading) return <div>Загрузка...</div>;
+  if (error) return <div>Ошибка: {error.message}</div>;
+
+  return (
+    <div>
+      {workspaces?.map((workspace) => (
+        <div key={workspace.id}>{workspace.name}</div>
+      ))}
+    </div>
+  );
+}
+```
+
+**Правила:**
+- Не вызывай функции из `queries/` напрямую в компонентах
+- Всегда используй хуки из `hooks/` через TanStack Query
+- Не смешивай бизнес-логику с представлением - хуки должны быть "тонкими"
+- Для сложной логики используй отдельные хуки или store (Zustand)
+
+## Публичный API модуля
+
+Каждый API модуль должен иметь `api/index.ts` с экспортом публичного API:
+
+```typescript
+/**
+ * @file: entities/workspaces/api/index.ts
+ * @description: Публичный API модуля workspaces
+ * @created: YYYY-MM-DD
+ */
+
+// Экспорт типов
+export type { Workspace } from './queries/getWorkspaces';
+
+// Экспорт query keys
+export { workspacesKeys } from './queryKeys';
+
+// Экспорт queries (опционально, если нужны напрямую)
+export { getWorkspaces, getWorkspaceById } from './queries/getWorkspaces';
+
+// Экспорт hooks (основной способ использования)
+export { useWorkspaces } from './hooks/useWorkspaces';
+export { useWorkspace } from './hooks/useWorkspace';
+export { useCreateWorkspace } from './hooks/useCreateWorkspace';
+```
+
+**Использование:**
+```typescript
+// Из entities
+import { useWorkspaces, type Workspace } from '@/entities/workspaces/api';
+
+// Из widgets
+import { useWorkspaces } from '@/widgets/workspaces-list/api';
+
+// Из shared
+import { useSomeQuery } from '@/shared/some-component/api';
+```
+
+## Обработка ошибок
+
+- Ошибки обрабатываются автоматически в axios interceptors
+- При 401 автоматически происходит refresh token
+- При неудачном refresh происходит редирект на `/login`
+- Для кастомной обработки ошибок используй `onError` в `useQuery`/`useMutation`:
+
+```typescript
+export const useWorkspaces = () => {
+  return useQuery({
+    queryKey: workspacesKeys.list.queryKey,
+    queryFn: getWorkspaces,
+    onError: (error) => {
+      // Кастомная обработка ошибки
+      console.error('Failed to fetch workspaces:', error);
+    },
+  });
+};
+```
+
+## Итоговая структура примера
+
+```
+shared/api/
+├── axios-client.ts               # Базовый axios клиент
+├── query-client.ts               # TanStack Query client
+└── endpoints.config.ts           # Константы эндпоинтов API (общие)
+
+entities/workspaces/
+├── api/
+│   ├── queries/
+│   │   ├── getWorkspaces.ts      # Функция запроса
+│   │   └── getWorkspaceById.ts
+│   ├── hooks/
+│   │   ├── useWorkspaces.ts      # Хук useQuery
+│   │   └── useWorkspace.ts
+│   ├── queryKeys.ts              # Query keys factory
+│   └── index.ts                  # Публичный API
+├── ui/
+├── model/
+└── index.ts
+
+widgets/workspaces-list/
+├── api/
+│   ├── queries/
+│   ├── hooks/
+│   └── index.ts
+└── ui/
+```
+
+**Ключевые принципы:**
+- Endpoints (маршруты API) - только в `shared/api/endpoints.config.ts`
+- Queries и hooks - в `api/` внутри того слоя/слайса, который их использует
+- Каждый слой может иметь свой собственный API модуль
+- Импорты: endpoints из `shared`, queries/hooks из соответствующего слоя
+- Пакетный менеджер: pnpm

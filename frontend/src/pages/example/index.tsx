@@ -15,7 +15,7 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/shared/ui/alert-dialog"
+} from "@/shared/ui/alertDialog"
 import { Badge } from "@/shared/ui/badge"
 import { Button } from "@/shared/ui/button"
 import {
@@ -51,7 +51,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@/shared/ui/dropdown-menu"
+} from "@/shared/ui/dropdownMenu"
 import { Field, FieldGroup, FieldLabel } from "@/shared/ui/field"
 import { Input } from "@/shared/ui/input"
 import {

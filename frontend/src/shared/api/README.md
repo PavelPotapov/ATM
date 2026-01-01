@@ -4,8 +4,8 @@
 
 ## Структура
 
-- `axios-client.ts` - axios клиент с интерцептором для JWT токенов
-- `query-client.ts` - TanStack Query client
+- `axiosClient.ts` - axios клиент с интерцептором для JWT токенов
+- `queryClient.ts` - TanStack Query client
 - `index.ts` - экспорт всех публичных API
 
 ## Использование
