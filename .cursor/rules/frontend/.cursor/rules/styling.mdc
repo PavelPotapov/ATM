@@ -1,0 +1,185 @@
+```md
+---
+description: Правила стилизации компонентов через CVA (Class Variance Authority)
+globs:
+  - "frontend/src/**/*.tsx"
+  - "frontend/src/**/*.ts"
+alwaysApply: true
+---
+
+# Стилизация компонентов через CVA (Class Variance Authority)
+
+**ВАЖНО:** Никогда не пиши длинные строки классов прямо в компоненте. Всегда используй `class-variance-authority` (CVA) для стилизации.
+
+## Исключения
+
+**Эти правила НЕ применяются к компонентам из shadcn/ui**, которые находятся в `shared/ui/`. 
+
+Компоненты, сгенерированные через `shadcn` (например, `Button`, `Card`, `Input`, `Sidebar` и т.д.), должны оставаться в их оригинальном виде без изменений. Они уже имеют свою структуру и стилизацию, которую не нужно переделывать под CVA.
+
+**Правила CVA применяются только к:**
+- Новым компонентам, которые ты создаешь самостоятельно
+- Компонентам в слоях `app/`, `pages/`, `widgets/`, `features/`, `entities/` (кроме `shared/ui/`)
+- Кастомным компонентам, не из shadcn/ui
+
+**Примеры исключений (не трогаем):**
+- `shared/ui/button.tsx` (shadcn компонент)
+- `shared/ui/card.tsx` (shadcn компонент)
+- `shared/ui/sidebar.tsx` (shadcn компонент)
+- Любые другие компоненты в `shared/ui/`, сгенерированные через shadcn
+
+## Структура стилей
+
+Для каждого компонента создавай папку `styles/` внутри папки `ui/` компонента:
+
+```
+layer/
+  sliceName/
+    ui/
+      ComponentName/
+        ComponentName.tsx
+        styles/
+          ComponentName.styles.ts
+```
+
+## Базовое использование CVA
+
+**Пример простого CVA без вариантов:**
+
+```typescript
+// ui/ComponentName/styles/ComponentName.styles.ts
+import { cva } from 'class-variance-authority';
+
+export const cvaRoot = cva([
+  'component-name-cvaRoot',
+  'flex flex-col min-w-36',
+  'bg-general_background_MIII_450_dark',
+]);
+
+export const cvaButtonContent = cva([
+  'component-name-cvaButton',
+  'inline-flex px-4 py-2 gap-1.5 w-full',
+]);
+```
+
+**Использование в компоненте:**
+
+```typescript
+// ui/ComponentName/ComponentName.tsx
+import { cvaRoot, cvaButtonContent } from './styles/ComponentName.styles';
+
+export function ComponentName() {
+  return (
+    <div className={cvaRoot()}>
+      <button className={cvaButtonContent()}>Click me</button>
+    </div>
+  );
+}
+```
+
+## CVA с вариантами (variants)
+
+**Пример CVA с вариантами:**
+
+```typescript
+// ui/ComponentName/styles/ComponentName.styles.ts
+import { cva } from 'class-variance-authority';
+
+export const cvaCardsContainer = cva(
+  [
+    'component-name-cvaCardsContainer',
+    'flex flex-col mx-auto z-[100] pb-[8.75rem] first:mt-12 relative',
+    'sm-max:pb-[2.5rem]',
+  ],
+  {
+    variants: {
+      isProPlan: {
+        true: 'mb-[12.5rem] sm-max:mb-[2.5rem]',
+        false: 'sm-max:mb-[2.5rem]',
+      },
+      size: {
+        sm: 'text-sm',
+        md: 'text-base',
+        lg: 'text-lg',
+      },
+    },
+    defaultVariants: {
+      isProPlan: false,
+      size: 'md',
+    },
+  },
+);
+```
+
+**Использование в компоненте:**
+
+```typescript
+// ui/ComponentName/ComponentName.tsx
+import { cvaCardsContainer } from './styles/ComponentName.styles';
+
+export function ComponentName({ isProPlan }: { isProPlan?: boolean }) {
+  return (
+    <div className={cvaCardsContainer({ isProPlan, size: 'lg' })}>
+      Content
+    </div>
+  );
+}
+```
+
+## Правила именования CVA
+
+- Имена CVA должны начинаться с префикса `cva` (например: `cvaRoot`, `cvaButtonContent`, `cvaCardsContainer`)
+- Первый класс в массиве должен быть уникальным идентификатором компонента для отладки (например: `'component-name-cvaRoot'`)
+- Используй kebab-case для идентификатора компонента (например: `'authenticated-layout-cvaRoot'`)
+
+## Примеры правильной структуры
+
+**Правильно:**
+```
+app/
+  layouts/
+    AuthenticatedLayout/
+      AuthenticatedLayout.tsx
+      styles/
+        AuthenticatedLayout.styles.ts
+```
+
+**Неправильно:**
+```typescript
+// ❌ НЕ ДЕЛАЙ ТАК - длинные строки классов в компоненте
+export function AuthenticatedLayout() {
+  return (
+    <div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b px-4">
+      <header className="flex flex-1 flex-col gap-4 p-4">
+        Content
+      </header>
+    </div>
+  );
+}
+```
+
+**Правильно:**
+```typescript
+// ✅ ДЕЛАЙ ТАК - стили вынесены в отдельный файл
+// AuthenticatedLayout.tsx
+import { cvaHeader, cvaMain } from './styles/AuthenticatedLayout.styles';
+
+export function AuthenticatedLayout() {
+  return (
+    <div className={cvaHeader()}>
+      <header className={cvaMain()}>
+        Content
+      </header>
+    </div>
+  );
+}
+```
+
+## Преимущества подхода
+
+1. **Читаемость**: Компоненты становятся чище и понятнее
+2. **Переиспользование**: Стили можно легко переиспользовать
+3. **Типобезопасность**: CVA обеспечивает типобезопасность вариантов
+4. **Отладка**: Уникальные идентификаторы классов помогают в DevTools
+5. **Масштабируемость**: Легко добавлять новые варианты и модификаторы
+```

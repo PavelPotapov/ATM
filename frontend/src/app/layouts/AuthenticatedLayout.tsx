@@ -8,17 +8,18 @@ import { Outlet } from '@tanstack/react-router';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/shared/ui/sidebar';
 import { ThemeToggle } from '@/shared/ui/themeToggle';
 import { AppSidebar } from '@/widgets/appSidebar';
+import { cvaHeader, cvaMain } from './styles/AuthenticatedLayout.styles';
 
 export function AuthenticatedLayout() {
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b px-4">
+        <header className={cvaHeader()}>
           <SidebarTrigger />
           <ThemeToggle />
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4">
+        <main className={cvaMain()}>
           <Outlet />
         </main>
       </SidebarInset>

@@ -8,6 +8,19 @@ import { useParams } from '@tanstack/react-router';
 import { useWorkspace } from '@/entities/workspaces/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Skeleton } from '@/shared/ui/skeleton';
+import {
+  cvaContainer,
+  cvaHeaderContainer,
+  cvaTitle,
+  cvaDescription,
+  cvaGrid,
+  cvaInfoContainer,
+  cvaInfoLabel,
+  cvaInfoValue,
+  cvaErrorCard,
+  cvaNotFoundText,
+  cvaSkeletonContainer,
+} from './styles/WorkspacePage.styles';
 
 export function WorkspacePage() {
   const { workspaceId } = useParams({ strict: false });
@@ -15,8 +28,8 @@ export function WorkspacePage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8">
-        <div className="mb-6">
+      <div className={cvaContainer()}>
+        <div className={cvaSkeletonContainer()}>
           <Skeleton className="h-9 w-64 mb-2" />
           <Skeleton className="h-5 w-96" />
         </div>
@@ -36,8 +49,8 @@ export function WorkspacePage() {
 
   if (error) {
     return (
-      <div className="container mx-auto py-8">
-        <Card className="w-full max-w-md mx-auto">
+      <div className={cvaContainer()}>
+        <Card className={cvaErrorCard()}>
           <CardHeader>
             <CardTitle>Ошибка</CardTitle>
             <CardDescription>Не удалось загрузить workspace</CardDescription>
@@ -54,10 +67,10 @@ export function WorkspacePage() {
 
   if (!workspace) {
     return (
-      <div className="container mx-auto py-8">
+      <div className={cvaContainer()}>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">
+            <p className={cvaNotFoundText()}>
               Workspace не найден
             </p>
           </CardContent>
@@ -67,34 +80,34 @@ export function WorkspacePage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">{workspace.name}</h1>
+    <div className={cvaContainer()}>
+      <div className={cvaHeaderContainer()}>
+        <h1 className={cvaTitle()}>{workspace.name}</h1>
         {workspace.description && (
-          <p className="text-muted-foreground mt-2">{workspace.description}</p>
+          <p className={cvaDescription()}>{workspace.description}</p>
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className={cvaGrid()}>
         <Card>
           <CardHeader>
             <CardTitle>Информация</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 text-sm">
+            <div className={cvaInfoContainer()}>
               <div>
-                <span className="font-medium">ID:</span>{' '}
-                <span className="text-muted-foreground">{workspace.id}</span>
+                <span className={cvaInfoLabel()}>ID:</span>{' '}
+                <span className={cvaInfoValue()}>{workspace.id}</span>
               </div>
               <div>
-                <span className="font-medium">Создан:</span>{' '}
-                <span className="text-muted-foreground">
+                <span className={cvaInfoLabel()}>Создан:</span>{' '}
+                <span className={cvaInfoValue()}>
                   {new Date(workspace.createdAt).toLocaleString('ru-RU')}
                 </span>
               </div>
               <div>
-                <span className="font-medium">Обновлен:</span>{' '}
-                <span className="text-muted-foreground">
+                <span className={cvaInfoLabel()}>Обновлен:</span>{' '}
+                <span className={cvaInfoValue()}>
                   {new Date(workspace.updatedAt).toLocaleString('ru-RU')}
                 </span>
               </div>
