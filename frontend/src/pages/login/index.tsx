@@ -8,7 +8,7 @@ import { LoginForm } from '@/features/authLogin';
 
 export function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="flex h-screen items-center justify-center">
       <LoginForm />
     </div>
   );

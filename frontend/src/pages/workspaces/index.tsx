@@ -12,7 +12,7 @@ export function WorkspacesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex items-center justify-center py-8">
         <div>Загрузка...</div>
       </div>
     );
@@ -20,7 +20,7 @@ export function WorkspacesPage() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex items-center justify-center py-8">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Ошибка</CardTitle>
@@ -37,7 +37,7 @@ export function WorkspacesPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Workspaces</h1>
         <p className="text-muted-foreground mt-2">

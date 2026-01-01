@@ -43,3 +43,9 @@ export * from './separator';
 // Textarea
 export * from './textarea';
 
+// Sidebar
+export * from './sidebar';
+
+// Theme Toggle
+export { ThemeToggle } from './themeToggle';
+

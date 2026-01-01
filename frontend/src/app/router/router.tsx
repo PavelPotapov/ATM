@@ -10,6 +10,7 @@ import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { LoginPage } from '@/pages/login';
 import { ExamplePage } from '@/pages/example';
 import { WorkspacesPage } from '@/pages/workspaces';
+import { AuthenticatedLayout } from '@/app/layouts/AuthenticatedLayout';
 import { ROUTES } from '@/shared/config/routes.config';
 import { hasAccessToken } from '@/shared/lib/storage/jwtTokenStorage';
 
@@ -23,14 +24,19 @@ const rootRoute = createRootRoute({
   ),
 });
 
-// Функция для проверки авторизации
-const requireAuth = () => {
-  if (!hasAccessToken()) {
-    throw redirect({
-      to: ROUTES.LOGIN,
-    });
-  }
-};
+// Layout route для защищенных страниц
+const authenticatedLayoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: 'authenticated-layout',
+  beforeLoad: () => {
+    if (!hasAccessToken()) {
+      throw redirect({
+        to: ROUTES.LOGIN,
+      });
+    }
+  },
+  component: AuthenticatedLayout,
+});
 
 // Функция для редиректа авторизованных пользователей с логина
 const redirectIfAuthenticated = () => {
@@ -51,9 +57,8 @@ const loginRoute = createRoute({
 
 // Workspaces route (защищенная страница)
 const workspacesRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authenticatedLayoutRoute,
   path: ROUTES.WORKSPACES,
-  beforeLoad: requireAuth,
   component: WorkspacesPage,
 });
 
@@ -65,7 +70,11 @@ const exampleRoute = createRoute({
 });
 
 // Route tree
-const routeTree = rootRoute.addChildren([loginRoute, workspacesRoute, exampleRoute]);
+const routeTree = rootRoute.addChildren([
+  loginRoute,
+  authenticatedLayoutRoute.addChildren([workspacesRoute]),
+  exampleRoute,
+]);
 
 // Create router
 export const router = createRouter({ routeTree });
