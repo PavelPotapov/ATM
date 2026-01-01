@@ -22,17 +22,19 @@ import { UserProfile } from './UserProfile';
 import { ROUTES } from '@/shared/config/routes.config';
 import { Link, useRouterState } from '@tanstack/react-router';
 
+const menuItems = [
+  {
+    title: 'Workspaces',
+    url: ROUTES.WORKSPACES,
+    icon: FolderKanban,
+  },
+];
+
 export function AppSidebar() {
   const router = useRouterState();
   const currentPath = router.location.pathname;
 
-  const menuItems = [
-    {
-      title: 'Workspaces',
-      url: ROUTES.WORKSPACES,
-      icon: FolderKanban,
-    },
-  ];
+  
 
   return (
     <Sidebar collapsible="icon">
