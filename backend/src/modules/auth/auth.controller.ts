@@ -8,6 +8,7 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   HttpCode,
   HttpStatus,
@@ -98,6 +99,31 @@ export class AuthController {
   ): Promise<RefreshResponse> {
     this.logger.log('Попытка обновления токена');
     return this.authService.refresh(refreshTokenDto.refresh_token);
+  }
+
+  /**
+   * GET /auth/me
+   * Получение информации о текущем пользователе
+   */
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Получение текущего пользователя',
+    description:
+      'Возвращает информацию о текущем аутентифицированном пользователе',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Данные текущего пользователя',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  getMe(@CurrentUser() user: AuthenticatedUser): AuthenticatedUser {
+    this.logger.log(`Получение данных пользователя: ${user.email}`);
+    return user;
   }
 
   /**
