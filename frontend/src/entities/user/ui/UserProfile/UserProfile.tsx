@@ -18,6 +18,15 @@ import {
 } from '@/shared/ui/dropdownMenu';
 import { useUser } from '@/features/authLogin/api';
 import { useLogout } from '@/features/authLogout';
+import {
+  cvaDisplayName,
+  cvaChevron,
+  cvaDropdownContent,
+  cvaUserInfo,
+  cvaUserName,
+  cvaUserEmail,
+  cvaUserRole,
+} from './styles/UserProfile.styles';
 
 export function UserProfile() {
   const user = useUser();
@@ -38,20 +47,20 @@ export function UserProfile() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton tooltip={displayName}>
               <User />
-              <span className="truncate">{displayName}</span>
-              <ChevronUp className="ml-auto group-data-[collapsible=icon]:hidden" />
+              <span className={cvaDisplayName()}>{displayName}</span>
+              <ChevronUp className={cvaChevron()} />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             side="top"
             align="end"
-            className="w-[--radix-dropdown-menu-trigger-width]"
+            className={cvaDropdownContent()}
           >
-            <div className="px-2 py-1.5 text-sm">
-              <div className="font-medium">{displayName}</div>
-              <div className="text-muted-foreground text-xs">{user.email}</div>
+            <div className={cvaUserInfo()}>
+              <div className={cvaUserName()}>{displayName}</div>
+              <div className={cvaUserEmail()}>{user.email}</div>
               {user.role && (
-                <div className="text-muted-foreground text-xs mt-1">
+                <div className={cvaUserRole()}>
                   Роль: {user.role}
                 </div>
               )}
