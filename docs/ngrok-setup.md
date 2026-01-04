@@ -11,65 +11,40 @@
 **Backend:**
 ```bash
 cd backend
-# Скопируйте пример конфигурации
 copy .env.example .env
-# Отредактируйте .env файл (пока можно оставить значения по умолчанию)
 ```
 
 **Frontend:**
 ```bash
 cd frontend
-# Скопируйте пример конфигурации
 copy .env.example .env
-# Отредактируйте .env файл (пока можно оставить значения по умолчанию)
 ```
 
-### Шаг 2: Выберите режим работы
+**Можно оставить значения по умолчанию - они не критичны для production режима.**
 
-**Для демонстрации (Production режим):**
-1. Соберите фронтенд: `cd frontend && pnpm run build`
-2. Запустите бэкенд в production: `cd backend && pnpm run build && NODE_ENV=production pnpm run start:prod`
+### Шаг 2: Запуск в Production режиме
+
+1. Запустите PostgreSQL: `docker-compose up -d`
+2. Соберите и запустите: `pnpm run start:prod` (из корня проекта)
 3. Запустите ngrok: `ngrok http 3000`
-4. Готово! Один URL для всего приложения
+4. Готово! Используйте ngrok URL для доступа к приложению
 
-**Для разработки (Dev режим):**
-1. Запустите бэкенд в dev: `cd backend && pnpm run start:dev`
-2. Запустите фронтенд в dev: `cd frontend && pnpm run dev`
-3. Запустите ngrok для бэкенда: `ngrok http 3000`
-4. Обновите `VITE_API_URL` в `.env` фронтенда на ngrok URL (например: `https://xxxx-xx-xx-xx-xx.ngrok-free.app`)
+**Важно:** Ngrok URL может меняться при перезапуске - ничего обновлять не нужно!
 
-## Два варианта работы с ngrok
+## Production режим
 
-### Вариант 1: Production режим (рекомендуется для демонстрации)
+**Как работает:**
 
-**Собрать фронтенд один раз + бэкенд в production:**
-
-- ✅ Собрать фронтенд один раз: `cd frontend && pnpm run build`
+- ✅ Собрать фронтенд один раз: `pnpm run build:frontend`
 - ✅ Бэкенд отдает фронтенд + API (все через один ngrok URL)
 - ✅ Один ngrok туннель для всего приложения
 - ✅ Проще для демонстрации - один URL для всего
-- ❌ Нет HMR (Hot Module Replacement) - нужно пересобирать при изменениях
+- ✅ Ngrok URL может меняться - ничего обновлять не нужно (относительные пути)
 
-**Когда использовать:** Для демонстрации клиенту, тестирования на мобильных устройствах, когда не нужна активная разработка.
-
-### Вариант 2: Dev режим (рекомендуется для разработки)
-
-**Фронтенд в dev + бэкенд в dev:**
-
-- ✅ Фронтенд на `localhost:5173` с HMR (быстрые изменения)
-- ✅ Бэкенд на `localhost:3000` через ngrok
-- ✅ Удобно для активной разработки
-- ❌ Нужно два URL (локальный для фронта, ngrok для бэка)
-- ❌ Нужно настраивать CORS
-
-**Когда использовать:** Для активной разработки, когда нужно видеть изменения в реальном времени.
-
-## Рекомендуемый подход для демонстрации: Production режим
-
-**Почему этот подход для демонстрации:**
+**Преимущества:**
 - ✅ Проще настройка - один ngrok URL
 - ✅ Бэкенд отдает фронтенд автоматически
-- ✅ Меньше проблем с CORS
+- ✅ Автоматическая работа с любым ngrok URL
 - ✅ БД уже в Docker, менять не нужно
 - ✅ Не нужно завертывать бэкенд в Docker
 
@@ -144,21 +119,10 @@ cd backend
 copy .env.example .env
 ```
 
-**Для Dev режима (фронтенд локально):**
+**Для Production режима:**
 ```env
 FRONTEND_URL=http://localhost:5173
-```
-
-**Для Production режима (все через ngrok):**
-```env
-FRONTEND_URL=http://localhost:5173
-# В production бэкенд отдает фронтенд, CORS не критичен, но можно оставить
-```
-
-**Важно:** Бэкенд уже поддерживает несколько origins через запятую. Если нужно добавить ngrok URL фронтенда:
-
-```env
-FRONTEND_URL=http://localhost:5173,https://your-frontend-ngrok-url.ngrok-free.app
+# В production CORS разрешает все origins автоматически, это значение не критично
 ```
 
 ### 5. Настройка фронтенда (API URL)
@@ -170,93 +134,45 @@ cd frontend
 copy .env.example .env
 ```
 
-#### Для Production режима (Вариант A):
+**Для Production режима:**
 
 Фронтенд уже собран и встроен в бэкенд, настройка не требуется. Бэкенд автоматически отдает фронтенд и API через один ngrok URL.
 
-#### Для Dev режима (Вариант B):
-
-Обновите `.env` файл:
-
-```env
-# URL бэкенда через ngrok
-VITE_API_URL=https://xxxx-xx-xx-xx-xx.ngrok-free.app
-```
-
 **Важно:** 
-- Замените `xxxx-xx-xx-xx-xx.ngrok-free.app` на ваш реальный ngrok URL
-- Перезапустите dev-сервер фронтенда после изменения `.env`
+- В production фронтенд использует относительные пути автоматически
+- Ngrok URL может меняться - ничего обновлять не нужно!
 
 ### 6. Запуск приложения
 
-#### Вариант A: Production режим (рекомендуется для демонстрации)
-
 **Терминал 1 - PostgreSQL (Docker):**
 ```bash
+# Из корня проекта:
+pnpm run docker:up
+# Или вручную:
 docker-compose up -d
 ```
 
-**Терминал 2 - Сборка фронтенда (один раз):**
+**Терминал 2 - Build and start (production):**
 ```bash
-cd frontend
-pnpm install
-pnpm run build
+# Из корня проекта - собирает фронтенд и бэкенд, затем запускает бэкенд:
+pnpm run start:prod
 ```
 
-**Терминал 3 - Backend (production):**
-```bash
-cd backend
-pnpm install
-pnpm run build
-# Windows PowerShell:
-$env:NODE_ENV="production"; pnpm run start:prod
-# Или Linux/Mac:
-NODE_ENV=production pnpm run start:prod
-```
-
-**Терминал 4 - ngrok:**
+**Терминал 3 - ngrok:**
 ```bash
 ngrok http 3000
 ```
 
 **Результат:** Один ngrok URL дает доступ и к фронтенду, и к API.
 
-#### Вариант B: Dev режим (для активной разработки)
-
-**Терминал 1 - PostgreSQL (Docker):**
-```bash
-docker-compose up -d
-```
-
-**Терминал 2 - ngrok (для бэкенда):**
-```bash
-ngrok http 3000
-# Скопируйте полученный URL (например: https://xxxx-xx-xx-xx-xx.ngrok-free.app)
-```
-
-**Терминал 3 - Backend (dev):**
-```bash
-cd backend
-pnpm install
-pnpm run start:dev
-```
-
-**Терминал 4 - Frontend (dev):**
-```bash
-cd frontend
-pnpm install
-# Обновите .env файл с ngrok URL бэкенда:
-# VITE_API_URL=https://xxxx-xx-xx-xx-xx.ngrok-free.app
-pnpm run dev
-```
-
-**Результат:** 
-- Фронтенд: `http://localhost:5173` (локально)
-- API: `https://xxxx-xx-xx-xx-xx.ngrok-free.app` (через ngrok)
+**Важно:** 
+- Ngrok URL может меняться при перезапуске - ничего обновлять не нужно!
+- Фронтенд использует относительные пути автоматически
+- CORS разрешает все origins в production режиме
 
 ## Дополнительные варианты
 
-### Вариант 3: Фронтенд через ngrok (не рекомендуется)
+### Вариант 2: Фронтенд через ngrok (не рекомендуется)
 
 Если нужно предоставить доступ к фронтенду:
 
@@ -274,7 +190,7 @@ pnpm run dev
 - Больше проблем с CORS
 - Сложнее настройка
 
-### Вариант 4: Оба через ngrok
+### Вариант 3: Оба через ngrok
 
 Если нужно предоставить доступ и к фронтенду, и к бэкенду:
 
@@ -290,7 +206,7 @@ pnpm run dev
 2. Обновите CORS на бэкенде
 3. Обновите `VITE_API_URL` на фронтенде
 
-### Вариант 5: Бэкенд в Docker + ngrok
+### Вариант 4: Бэкенд в Docker + ngrok
 
 Если хотите завернуть бэкенд в Docker:
 

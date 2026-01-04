@@ -18,10 +18,10 @@ import { API_ENDPOINTS } from '@/shared/config/endpoints.config';
 import { ROUTES } from '@/shared/config/routes.config';
 
 // Базовый URL API
-// В production: используем текущий домен (ngrok URL), так как фронтенд и API на одном домене
+// В production: используем пустую строку (относительные пути) - axios автоматически использует текущий домен
 // В development: используем VITE_API_URL из .env или localhost
 const API_BASE_URL = import.meta.env.PROD
-  ? window.location.origin // В production используем текущий домен (ngrok)
+  ? '' // В production используем относительные пути (текущий домен автоматически)
   : import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 // Promise для предотвращения множественных запросов refresh
