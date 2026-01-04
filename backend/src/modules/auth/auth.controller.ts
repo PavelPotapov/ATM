@@ -191,9 +191,9 @@ export class AuthController {
     status: 401,
     description: 'Требуется аутентификация',
   })
-  getPermissions(
-    @CurrentUser() user: AuthenticatedUser,
-  ): { permissions: PermissionsList } {
+  getPermissions(@CurrentUser() user: AuthenticatedUser): {
+    permissions: PermissionsList;
+  } {
     this.logger.log(`Получение разрешений для пользователя: ${user.email}`);
     const permissions = this.permissionsService.getPermissionsByRole(user.role);
     return { permissions };
