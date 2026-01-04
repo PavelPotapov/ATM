@@ -21,9 +21,18 @@ datasource db {
 
 // Роли пользователей в системе
 enum Role {
-  ADMIN   // Администратор - полный доступ
+  ADMIN // Администратор - полный доступ
   MANAGER // Менеджер - управление проектами
-  WORKER  // Работник - ограниченный доступ
+  WORKER // Работник - ограниченный доступ
+}
+
+// Тип данных столбца сметы
+enum ColumnDataType {
+  STRING // Текстовая строка
+  NUMBER // Число
+  ENUM // Перечисление (ограниченный набор значений)
+  BOOLEAN // Булево значение
+  DATE // Дата
 }
 
 // ============================================
@@ -32,39 +41,45 @@ enum Role {
 
 // Пользователь системы
 model User {
-  id           String   @id @default(uuid()) // Уникальный ID (UUID)
-  email        String   @unique // Email - уникальный, используется для входа
-  password     String   // Хэш пароля (будем хэшировать, не храним в открытом виде)
-  firstName    String?  // Имя (опционально)
-  lastName     String?  // Фамилия (опционально)
-  role         Role     @default(WORKER) // Роль пользователя, по умолчанию WORKER
-  refreshToken String?  // Refresh token для обновления access token (опционально)
-  
+  id           String  @id @default(uuid()) // Уникальный ID (UUID)
+  email        String  @unique // Email - уникальный, используется для входа
+  password     String // Хэш пароля (будем хэшировать, не храним в открытом виде)
+  firstName    String? // Имя (опционально)
+  lastName     String? // Фамилия (опционально)
+  role         Role    @default(WORKER) // Роль пользователя, по умолчанию WORKER
+  refreshToken String? // Refresh token для обновления access token (опционально)
+
   // Связи с другими таблицами
-  workspaces WorkspaceUser[] // Связь многие-ко-многим с Workspace
-  workspaceHistory WorkspaceHistory[] // История изменений workspace
-  
+  workspaces             WorkspaceUser[] // Связь многие-ко-многим с Workspace
+  workspaceHistory       WorkspaceHistory[] // История изменений workspace
+  cellHistory            CellHistory[] // История изменений ячеек смет
+  createdEstimates       Estimate[] // Сметы, созданные пользователем
+  createdEstimateColumns EstimateColumn[] // Столбцы смет, созданные пользователем
+  uploadedFiles          WorkspaceFile[] // Файлы, загруженные пользователем
+
   // Timestamps (автоматически заполняются)
   createdAt DateTime @default(now()) // Дата создания
-  updatedAt DateTime @updatedAt      // Дата последнего обновления
+  updatedAt DateTime @updatedAt // Дата последнего обновления
 
   @@map("users") // Имя таблицы в БД
 }
 
 // Рабочее пространство (строительный проект)
 model Workspace {
-  id          String   @id @default(uuid())
-  name        String   // Название проекта
-  description String?  // Описание (опционально)
+  id          String    @id @default(uuid())
+  name        String // Название проекта
+  description String? // Описание (опционально)
   deletedAt   DateTime? // Дата мягкого удаления (soft delete)
-  
+
   // Связи
-  users       WorkspaceUser[] // Связь многие-ко-многим с User
-  history     WorkspaceHistory[] // История изменений
-  
+  users     WorkspaceUser[] // Связь многие-ко-многим с User
+  history   WorkspaceHistory[] // История изменений
+  estimates Estimate[] // Сметы проекта
+  files     WorkspaceFile[] // Файлы проекта
+
   // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("workspaces")
 }
@@ -73,17 +88,17 @@ model Workspace {
 // Это нужно, потому что один пользователь может работать в нескольких проектах,
 // а один проект может иметь несколько пользователей
 model WorkspaceUser {
-  id          String   @id @default(uuid())
-  userId      String   // ID пользователя
-  workspaceId String   // ID проекта
-  
+  id          String @id @default(uuid())
+  userId      String // ID пользователя
+  workspaceId String // ID проекта
+
   // Связи
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
   // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Уникальная комбинация: один пользователь не может быть дважды в одном проекте
   @@unique([userId, workspaceId])
@@ -92,24 +107,200 @@ model WorkspaceUser {
 
 // История изменений workspace (аудит)
 model WorkspaceHistory {
-  id          String   @id @default(uuid())
-  workspaceId String   // ID workspace
-  userId      String   // ID пользователя, который внес изменение
-  action      String   // Действие: CREATED, UPDATED, DELETED, USER_ADDED, USER_REMOVED
-  field       String?  // Поле, которое было изменено (name, description и т.д.)
-  oldValue    String?  // Старое значение (JSON строка для сложных объектов)
-  newValue    String?  // Новое значение (JSON строка для сложных объектов)
-  metadata    String?  // Дополнительные данные (JSON строка)
-  
+  id          String  @id @default(uuid())
+  workspaceId String // ID workspace
+  userId      String // ID пользователя, который внес изменение
+  action      String // Действие: CREATED, UPDATED, DELETED, USER_ADDED, USER_REMOVED
+  field       String? // Поле, которое было изменено (name, description и т.д.)
+  oldValue    String? // Старое значение (JSON строка для сложных объектов)
+  newValue    String? // Новое значение (JSON строка для сложных объектов)
+  metadata    String? // Дополнительные данные (JSON строка)
+
   // Связи
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Timestamps
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([workspaceId]) // Индекс для быстрого поиска по workspace
   @@index([userId]) // Индекс для быстрого поиска по пользователю
   @@index([action]) // Индекс для фильтрации по действию
   @@map("workspace_history")
+}
+
+// ============================================
+// ESTIMATES (Сметы)
+// ============================================
+
+// Смета (ТЗ проекта)
+model Estimate {
+  id          String    @id @default(uuid())
+  workspaceId String // ID проекта (workspace)
+  createdById String // ID пользователя, который создал смету
+  name        String // Название сметы
+  description String? // Описание сметы (опционально)
+  deletedAt   DateTime? // Дата мягкого удаления (soft delete)
+
+  // Связи
+  workspace Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User             @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  columns   EstimateColumn[] // Столбцы сметы
+  rows      EstimateRow[] // Строки сметы
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workspaceId]) // Индекс для быстрого поиска по workspace
+  @@index([createdById]) // Индекс для быстрого поиска по создателю
+  @@map("estimates")
+}
+
+// Столбец сметы (определяет структуру таблицы)
+model EstimateColumn {
+  id            String         @id @default(uuid())
+  estimateId    String // ID сметы
+  createdById   String // ID пользователя, который создал столбец
+  name          String // Название столбца (например, "п/п", "Наименование", "Ед. изм")
+  dataType      ColumnDataType @default(STRING) // Тип данных столбца
+  order         Int // Порядок отображения столбца
+  required      Boolean        @default(false) // Обязательное ли поле
+  allowedValues String? // JSON массив разрешенных значений (для ENUM типа)
+  // Пример для ENUM: ["м", "м2", "шт", "л"] или ["кондиционирование", "вентиляция"]
+
+  // Связи
+  estimate    Estimate               @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+  createdBy   User                   @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  cells       Cell[] // Ячейки этого столбца
+  permissions ColumnRolePermission[] // Разрешения на столбец для ролей
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([estimateId]) // Индекс для быстрого поиска по смете
+  @@index([estimateId, order]) // Индекс для сортировки столбцов
+  @@index([createdById]) // Индекс для быстрого поиска по создателю
+  @@map("estimate_columns")
+}
+
+// Строка сметы (одна позиция в смете)
+model EstimateRow {
+  id         String @id @default(uuid())
+  estimateId String // ID сметы
+  order      Int // Порядок строки в смете
+
+  // Связи
+  estimate Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+  cells    Cell[] // Ячейки этой строки
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([estimateId]) // Индекс для быстрого поиска по смете
+  @@index([estimateId, order]) // Индекс для сортировки строк
+  @@map("estimate_rows")
+}
+
+// Ячейка таблицы сметы (значение в пересечении строки и столбца)
+model Cell {
+  id       String  @id @default(uuid())
+  rowId    String // ID строки
+  columnId String // ID столбца
+  value    String? // Значение ячейки (JSON строка для сложных типов)
+  // Для STRING: просто текст
+  // Для NUMBER: число в виде строки
+  // Для ENUM: одно из разрешенных значений
+  // Для BOOLEAN: "true" или "false"
+  // Для DATE: ISO строка даты
+
+  // Связи
+  row     EstimateRow    @relation(fields: [rowId], references: [id], onDelete: Cascade)
+  column  EstimateColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  history CellHistory[] // История изменений ячейки
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Уникальная комбинация: одна ячейка на пересечение строки и столбца
+  @@unique([rowId, columnId])
+  @@index([rowId]) // Индекс для быстрого поиска по строке
+  @@index([columnId]) // Индекс для быстрого поиска по столбцу
+  @@map("cells")
+}
+
+// История изменений ячейки (аудит)
+model CellHistory {
+  id       String  @id @default(uuid())
+  cellId   String // ID ячейки
+  userId   String // ID пользователя, который внес изменение
+  oldValue String? // Старое значение ячейки
+  newValue String? // Новое значение ячейки
+  reason   String? // Причина изменения (опционально, для будущего функционала)
+
+  // Связи
+  cell Cell @relation(fields: [cellId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  @@index([cellId]) // Индекс для быстрого поиска по ячейке
+  @@index([userId]) // Индекс для быстрого поиска по пользователю
+  @@index([createdAt]) // Индекс для сортировки по дате
+  @@map("cell_history")
+}
+
+// Разрешения на столбцы для ролей
+model ColumnRolePermission {
+  id        String  @id @default(uuid())
+  columnId  String // ID столбца
+  role      Role // Роль пользователя
+  canView   Boolean @default(true) // Может видеть столбец
+  canEdit   Boolean @default(false) // Может редактировать столбец
+  canCreate Boolean @default(false) // Может создавать столбцы (для будущего)
+
+  // Связи
+  column EstimateColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Уникальная комбинация: одна запись разрешений на роль для столбца
+  @@unique([columnId, role])
+  @@index([columnId]) // Индекс для быстрого поиска по столбцу
+  @@index([role]) // Индекс для быстрого поиска по роли
+  @@map("column_role_permissions")
+}
+
+// Файлы проекта (ТЗ, сметы, документы)
+model WorkspaceFile {
+  id           String    @id @default(uuid())
+  workspaceId  String // ID проекта
+  uploadedById String // ID пользователя, который загрузил файл
+  name         String // Название файла (для отображения)
+  originalName String // Оригинальное имя файла при загрузке
+  mimeType     String // MIME тип файла (application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet)
+  filePath     String // Путь к файлу на сервере
+  fileSize     Int // Размер файла в байтах
+  category     String? // Категория файла (ТЗ, Смета, Документы и т.д.)
+  description  String? // Описание файла (опционально)
+  deletedAt    DateTime? // Дата мягкого удаления (soft delete)
+
+  // Связи
+  workspace  Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  uploadedBy User      @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workspaceId]) // Индекс для быстрого поиска по проекту
+  @@index([uploadedById]) // Индекс для быстрого поиска по загрузившему
+  @@index([category]) // Индекс для фильтрации по категории
+  @@map("workspace_files")
 }

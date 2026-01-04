@@ -1,0 +1,350 @@
+/**
+ * @file: estimates.controller.ts
+ * @description: Контроллер для обработки HTTP запросов, связанных со сметами
+ * @dependencies: EstimatesService, DTOs
+ * @created: 2025-01-04
+ */
+
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { EstimatesService } from './estimates.service';
+import { CreateEstimateDto } from './dto/create-estimate.dto';
+import { UpdateEstimateDto } from './dto/update-estimate.dto';
+import { CreateEstimateColumnDto } from './dto/create-estimate-column.dto';
+import { UpdateEstimateColumnDto } from './dto/update-estimate-column.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../users/types/user.types';
+
+/**
+ * EstimatesController - контроллер для работы со сметами
+ *
+ * @Controller('estimates') - базовый путь: /estimates
+ */
+@ApiTags('Сметы')
+@ApiBearerAuth('JWT-auth')
+@Controller('estimates')
+@UseGuards(JwtAuthGuard) // Все endpoints требуют аутентификации
+export class EstimatesController {
+  constructor(private readonly estimatesService: EstimatesService) {}
+
+  /**
+   * POST /estimates
+   * Создание новой сметы
+   */
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Создание сметы',
+    description: 'Создает новую смету для проекта',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Смета успешно создана',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Неверные данные',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Недостаточно прав (только ADMIN и MANAGER могут создавать сметы)',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Проект не найден',
+  })
+  create(
+    @Body() createEstimateDto: CreateEstimateDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.estimatesService.create(createEstimateDto, user);
+  }
+
+  /**
+   * GET /estimates/workspace/:workspaceId
+   * Получение всех смет проекта
+   */
+  @Get('workspace/:workspaceId')
+  @ApiOperation({
+    summary: 'Получение всех смет проекта',
+    description: 'Возвращает список всех смет для указанного проекта',
+  })
+  @ApiParam({
+    name: 'workspaceId',
+    description: 'ID проекта',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Список смет',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Проект не найден',
+  })
+  findAllByWorkspace(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.estimatesService.findAllByWorkspace(workspaceId, user);
+  }
+
+  /**
+   * GET /estimates/:id
+   * Получение сметы по ID
+   */
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Получение сметы по ID',
+    description: 'Возвращает информацию о смете с данными о создателе',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID сметы',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiQuery({
+    name: 'full',
+    required: false,
+    type: Boolean,
+    description: 'Получить полную информацию (со столбцами и количеством строк)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Информация о смете',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Смета не найдена',
+  })
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('full') full?: string,
+  ) {
+    if (full === 'true') {
+      return this.estimatesService.findOneFull(id, user);
+    }
+    return this.estimatesService.findOne(id, user);
+  }
+
+  /**
+   * PATCH /estimates/:id
+   * Обновление сметы
+   */
+  @Patch(':id')
+  @ApiOperation({
+    summary: 'Обновление сметы',
+    description: 'Обновляет информацию о смете',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID сметы',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Смета успешно обновлена',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Неверные данные',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Смета не найдена',
+  })
+  update(
+    @Param('id') id: string,
+    @Body() updateEstimateDto: UpdateEstimateDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.estimatesService.update(id, updateEstimateDto, user);
+  }
+
+  /**
+   * DELETE /estimates/:id
+   * Удаление сметы (мягкое удаление)
+   */
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Удаление сметы',
+    description: 'Выполняет мягкое удаление сметы',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID сметы',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 204,
+    description: 'Смета успешно удалена',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Смета не найдена',
+  })
+  remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.estimatesService.remove(id, user);
+  }
+
+  /**
+   * POST /estimates/:estimateId/columns
+   * Создание столбца сметы
+   */
+  @Post(':estimateId/columns')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Создание столбца сметы',
+    description: 'Создает новый столбец для сметы',
+  })
+  @ApiParam({
+    name: 'estimateId',
+    description: 'ID сметы',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Столбец успешно создан',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Неверные данные или столбец с таким порядком уже существует',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Недостаточно прав (только ADMIN и MANAGER могут создавать столбцы)',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Смета не найдена',
+  })
+  createColumn(
+    @Param('estimateId') estimateId: string,
+    @Body() createColumnDto: CreateEstimateColumnDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.estimatesService.createColumn(
+      { ...createColumnDto, estimateId },
+      user,
+    );
+  }
+
+  /**
+   * PATCH /estimates/columns/:columnId
+   * Обновление столбца сметы
+   */
+  @Patch('columns/:columnId')
+  @ApiOperation({
+    summary: 'Обновление столбца сметы',
+    description: 'Обновляет информацию о столбце сметы',
+  })
+  @ApiParam({
+    name: 'columnId',
+    description: 'ID столбца',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Столбец успешно обновлен',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Неверные данные',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Столбец не найден',
+  })
+  updateColumn(
+    @Param('columnId') columnId: string,
+    @Body() updateColumnDto: UpdateEstimateColumnDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.estimatesService.updateColumn(columnId, updateColumnDto, user);
+  }
+
+  /**
+   * DELETE /estimates/columns/:columnId
+   * Удаление столбца сметы
+   */
+  @Delete('columns/:columnId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Удаление столбца сметы',
+    description: 'Удаляет столбец сметы (каскадно удалятся все ячейки)',
+  })
+  @ApiParam({
+    name: 'columnId',
+    description: 'ID столбца',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 204,
+    description: 'Столбец успешно удален',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Столбец не найден',
+  })
+  removeColumn(
+    @Param('columnId') columnId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.estimatesService.removeColumn(columnId, user);
+  }
+}
+

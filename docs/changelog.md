@@ -8,6 +8,53 @@
 - [Обзор модулей Backend](./backend-modules.md)
 - [Документация модулей](./backend-modules.md#модули)
 
+## [2025-01-04] - Добавление модуля Estimates (Сметы)
+
+### Добавлено
+- Prisma схема для модуля Estimates:
+  - **Estimate** - смета (ТЗ проекта), связана с Workspace и User (createdBy)
+  - **EstimateColumn** - столбец сметы с типами данных (STRING, NUMBER, ENUM, BOOLEAN, DATE)
+  - **EstimateRow** - строка сметы
+  - **Cell** - ячейка таблицы (значение в пересечении строки и столбца)
+  - **CellHistory** - история изменений ячеек (аудит с привязкой к User)
+  - **ColumnRolePermission** - разрешения на столбцы для ролей (canView, canEdit, canCreate)
+  - **WorkspaceFile** - файлы проекта (ТЗ, сметы, документы) с категориями
+- Enum `ColumnDataType` для типов данных столбцов
+- Миграция базы данных `20260104125836_add_estimates_and_files`
+- Документация архитектуры модуля Estimates (`docs/ESTIMATES_ARCHITECTURE.md`)
+- Backend модуль `EstimatesModule`:
+  - **EstimatesService** - сервис для работы со сметами и столбцами
+  - **EstimatesController** - REST API endpoints для смет
+  - DTOs: `CreateEstimateDto`, `UpdateEstimateDto`, `CreateEstimateColumnDto`, `UpdateEstimateColumnDto`
+  - Типы: `EstimateWithTimestamps`, `EstimateWithCreator`, `EstimateWithColumns`, `EstimateFull`
+  - Endpoints:
+    - `POST /estimates` - создание сметы
+    - `GET /estimates/workspace/:workspaceId` - список смет проекта
+    - `GET /estimates/:id` - получение сметы (с опцией `?full=true` для полной информации)
+    - `PATCH /estimates/:id` - обновление сметы
+    - `DELETE /estimates/:id` - удаление сметы
+    - `POST /estimates/:estimateId/columns` - создание столбца
+    - `PATCH /estimates/columns/:columnId` - обновление столбца
+    - `DELETE /estimates/columns/:columnId` - удаление столбца
+- Документация модуля (`backend/src/modules/estimates/docs/README.md`)
+
+### Изменено
+- Обновлена модель `User` - добавлены связи с Estimates и WorkspaceFile
+- Обновлена модель `Workspace` - добавлены связи с Estimates и WorkspaceFile
+- `AppModule` - добавлен `EstimatesModule` в imports
+
+### Исправлено
+- Добавлена проверка ролей при создании смет и столбцов:
+  - Только ADMIN и MANAGER могут создавать сметы (`POST /estimates`)
+  - Только ADMIN и MANAGER могут создавать столбцы (`POST /estimates/:estimateId/columns`)
+  - WORKER получает `403 Forbidden` при попытке создать смету или столбец
+
+### Технические детали
+- `EstimateColumn.allowedValues` хранится как JSON строка для ENUM типов
+- `Cell.value` хранится как String (парсится при необходимости для NUMBER)
+- Разрешения реализованы на уровне ролей (ColumnRolePermission)
+- Файлы хранятся локально на сервере (поле `filePath`)
+
 ## [2025-01-XX] - Поддержка ngrok для dev и production режимов
 
 ### Добавлено
