@@ -11,6 +11,7 @@ import { LoginPage } from '@/pages/login';
 import { WorkspacesPage } from '@/pages/workspaces';
 import { WorkspacePage } from '@/pages/workspaces/$workspaceId';
 import { UsersPage } from '@/pages/users';
+import { EstimatePage } from '@/pages/estimates/$estimateId';
 import { AuthenticatedLayout } from '@/app/layouts/AuthenticatedLayout';
 import { ROUTES } from '@/shared/config/routes.config';
 import { hasAccessToken } from '@/shared/lib/storage/jwtTokenStorage';
@@ -77,10 +78,22 @@ const usersRoute = createRoute({
   component: UsersPage,
 });
 
+// Estimate detail route (защищенная страница)
+const estimateDetailRoute = createRoute({
+  getParentRoute: () => authenticatedLayoutRoute,
+  path: '/estimates/$estimateId',
+  component: EstimatePage,
+});
+
 // Route tree
 const routeTree = rootRoute.addChildren([
   loginRoute,
-  authenticatedLayoutRoute.addChildren([workspacesRoute, workspaceDetailRoute, usersRoute]),
+  authenticatedLayoutRoute.addChildren([
+    workspacesRoute,
+    workspaceDetailRoute,
+    usersRoute,
+    estimateDetailRoute,
+  ]),
 ]);
 
 // Create router

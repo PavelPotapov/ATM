@@ -25,6 +25,12 @@ export const PERMISSIONS = {
   USERS_UPDATE: 'users.update',
   USERS_DELETE: 'users.delete',
   USERS_VIEW: 'users.view',
+
+  // Estimates
+  ESTIMATES_CREATE: 'estimates.create',
+  ESTIMATES_UPDATE: 'estimates.update',
+  ESTIMATES_DELETE: 'estimates.delete',
+  ESTIMATES_VIEW: 'estimates.view',
 } as const;
 
 /**

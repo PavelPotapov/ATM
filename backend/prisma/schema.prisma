@@ -55,9 +55,10 @@ model User {
   cellHistory            CellHistory[] // История изменений ячеек смет
   createdEstimates       Estimate[] // Сметы, созданные пользователем
   createdEstimateColumns EstimateColumn[] // Столбцы смет, созданные пользователем
-  uploadedFiles          WorkspaceFile[] // Файлы, загруженные пользователем
+      uploadedFiles          WorkspaceFile[] // Файлы, загруженные пользователем
+      columnHistory          ColumnHistory[]      @relation("ColumnHistory")
 
-  // Timestamps (автоматически заполняются)
+      // Timestamps (автоматически заполняются)
   createdAt DateTime @default(now()) // Дата создания
   updatedAt DateTime @updatedAt // Дата последнего обновления
 
@@ -174,6 +175,7 @@ model EstimateColumn {
   createdBy   User                   @relation(fields: [createdById], references: [id], onDelete: Restrict)
   cells       Cell[] // Ячейки этого столбца
   permissions ColumnRolePermission[] // Разрешения на столбец для ролей
+  history     ColumnHistory[] // История изменений столбца
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -252,6 +254,31 @@ model CellHistory {
   @@index([userId]) // Индекс для быстрого поиска по пользователю
   @@index([createdAt]) // Индекс для сортировки по дате
   @@map("cell_history")
+}
+
+// История изменений столбца (аудит)
+model ColumnHistory {
+  id        String  @id @default(uuid())
+  columnId  String // ID столбца
+  userId    String // ID пользователя, который внес изменение
+  action    String // Действие: CREATED, UPDATED, PERMISSION_CHANGED
+  field     String? // Поле, которое было изменено (name, dataType, order, allowedValues, canView, canEdit и т.д.)
+  oldValue  String? // Старое значение (JSON строка для сложных объектов)
+  newValue  String? // Новое значение (JSON строка для сложных объектов)
+  metadata  String? // Дополнительные данные (JSON строка, например: { role: "WORKER", permissionId: "..." })
+
+  // Связи
+  column EstimateColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  user   User           @relation("ColumnHistory", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  @@index([columnId]) // Индекс для быстрого поиска по столбцу
+  @@index([userId]) // Индекс для быстрого поиска по пользователю
+  @@index([action]) // Индекс для фильтрации по действию
+  @@index([createdAt]) // Индекс для сортировки по дате
+  @@map("column_history")
 }
 
 // Разрешения на столбцы для ролей

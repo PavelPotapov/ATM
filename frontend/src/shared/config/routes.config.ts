@@ -13,5 +13,8 @@ const routes = {
   USERS: '/users',
 } as const;
 
-export const ROUTES = normalizeRoutes(routes);
+export const ROUTES = {
+  ...normalizeRoutes(routes),
+  ESTIMATE_DETAIL: (id: string) => `/estimates/${id}`,
+} as const;
 

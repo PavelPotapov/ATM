@@ -10,6 +10,7 @@
 export const PermissionEntity = {
   WORKSPACES: 'workspaces',
   USERS: 'users',
+  ESTIMATES: 'estimates',
 } as const;
 
 export type PermissionEntity = typeof PermissionEntity[keyof typeof PermissionEntity];
@@ -57,5 +58,11 @@ export const PERMISSIONS = {
   USERS_UPDATE: 'users.update' as Permission,
   USERS_DELETE: 'users.delete' as Permission,
   USERS_VIEW: 'users.view' as Permission,
+
+  // Estimates
+  ESTIMATES_CREATE: 'estimates.create' as Permission,
+  ESTIMATES_UPDATE: 'estimates.update' as Permission,
+  ESTIMATES_DELETE: 'estimates.delete' as Permission,
+  ESTIMATES_VIEW: 'estimates.view' as Permission,
 } as const;
 

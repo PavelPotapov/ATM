@@ -11,6 +11,15 @@
 ## [2025-01-04] - Добавление модуля Estimates (Сметы)
 
 ### Добавлено
+- Permissions для estimates на бэкенде:
+  - `ESTIMATES_CREATE` - создание смет
+  - `ESTIMATES_UPDATE` - обновление смет
+  - `ESTIMATES_DELETE` - удаление смет
+  - `ESTIMATES_VIEW` - просмотр смет
+- Распределение permissions по ролям:
+  - **ADMIN**: все permissions (CREATE, UPDATE, DELETE, VIEW)
+  - **MANAGER**: CREATE, UPDATE, DELETE, VIEW (в своих workspace)
+  - **WORKER**: только VIEW
 - Prisma схема для модуля Estimates:
   - **Estimate** - смета (ТЗ проекта), связана с Workspace и User (createdBy)
   - **EstimateColumn** - столбец сметы с типами данных (STRING, NUMBER, ENUM, BOOLEAN, DATE)

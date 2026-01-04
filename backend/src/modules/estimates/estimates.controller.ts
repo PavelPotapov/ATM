@@ -31,6 +31,8 @@ import { CreateEstimateDto } from './dto/create-estimate.dto';
 import { UpdateEstimateDto } from './dto/update-estimate.dto';
 import { CreateEstimateColumnDto } from './dto/create-estimate-column.dto';
 import { UpdateEstimateColumnDto } from './dto/update-estimate-column.dto';
+import { CreateColumnPermissionDto } from './dto/create-column-permission.dto';
+import { UpdateColumnPermissionDto } from './dto/update-column-permission.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../users/types/user.types';
@@ -345,6 +347,202 @@ export class EstimatesController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.estimatesService.removeColumn(columnId, user);
+  }
+
+  /**
+   * GET /estimates/columns/:columnId
+   * Получение столбца с полной информацией (создатель и разрешения)
+   */
+  @Get('columns/:columnId')
+  @ApiOperation({
+    summary: 'Получение столбца с полной информацией',
+    description: 'Возвращает информацию о столбце с данными о создателе и разрешениями для ролей',
+  })
+  @ApiParam({
+    name: 'columnId',
+    description: 'ID столбца',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Информация о столбце',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Столбец не найден',
+  })
+  getColumnFull(
+    @Param('columnId') columnId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.estimatesService.findColumnFull(columnId, user);
+  }
+
+  /**
+   * POST /estimates/columns/:columnId/permissions
+   * Создание разрешения на столбец для роли
+   */
+  @Post('columns/:columnId/permissions')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Создание разрешения на столбец',
+    description: 'Создает разрешение на столбец для указанной роли',
+  })
+  @ApiParam({
+    name: 'columnId',
+    description: 'ID столбца',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Разрешение успешно создано',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Неверные данные или разрешение уже существует',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Недостаточно прав (только ADMIN и MANAGER)',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Столбец не найден',
+  })
+  createColumnPermission(
+    @Param('columnId') columnId: string,
+    @Body() createPermissionDto: CreateColumnPermissionDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.estimatesService.createColumnPermission(
+      { ...createPermissionDto, columnId },
+      user,
+    );
+  }
+
+  /**
+   * PATCH /estimates/columns/permissions/:permissionId
+   * Обновление разрешения на столбец
+   */
+  @Patch('columns/permissions/:permissionId')
+  @ApiOperation({
+    summary: 'Обновление разрешения на столбец',
+    description: 'Обновляет разрешение на столбец для роли',
+  })
+  @ApiParam({
+    name: 'permissionId',
+    description: 'ID разрешения',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Разрешение успешно обновлено',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Неверные данные',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Недостаточно прав (только ADMIN и MANAGER)',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Разрешение не найдено',
+  })
+  updateColumnPermission(
+    @Param('permissionId') permissionId: string,
+    @Body() updatePermissionDto: UpdateColumnPermissionDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.estimatesService.updateColumnPermission(
+      permissionId,
+      updatePermissionDto,
+      user,
+    );
+  }
+
+  /**
+   * DELETE /estimates/columns/permissions/:permissionId
+   * Удаление разрешения на столбец
+   */
+  @Delete('columns/permissions/:permissionId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Удаление разрешения на столбец',
+    description: 'Удаляет разрешение на столбец для роли',
+  })
+  @ApiParam({
+    name: 'permissionId',
+    description: 'ID разрешения',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 204,
+    description: 'Разрешение успешно удалено',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Недостаточно прав (только ADMIN и MANAGER)',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Разрешение не найдено',
+  })
+  removeColumnPermission(
+    @Param('permissionId') permissionId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.estimatesService.removeColumnPermission(permissionId, user);
+  }
+
+  /**
+   * GET /estimates/columns/:columnId/history
+   * Получение истории изменений столбца
+   */
+  @Get('columns/:columnId/history')
+  @ApiOperation({
+    summary: 'Получение истории изменений столбца',
+    description: 'Возвращает историю всех изменений столбца (создание, обновление, изменение разрешений)',
+  })
+  @ApiParam({
+    name: 'columnId',
+    description: 'ID столбца',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'История изменений столбца',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Столбец не найден',
+  })
+  getColumnHistory(
+    @Param('columnId') columnId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.estimatesService.getColumnHistory(columnId, user);
   }
 }
 

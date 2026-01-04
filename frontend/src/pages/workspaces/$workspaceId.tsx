@@ -6,6 +6,8 @@
 
 import { useParams } from '@tanstack/react-router';
 import { useWorkspace } from '@/entities/workspaces/api';
+import { EstimateList } from '@/entities/estimates';
+import { CreateEstimateDialog } from '@/features/estimates';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Skeleton } from '@/shared/ui/skeleton';
 import {
@@ -114,6 +116,19 @@ export function WorkspacePage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="mt-8">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">Сметы проекта</h2>
+            <p className="text-muted-foreground mt-1">
+              Список смет для этого проекта
+            </p>
+          </div>
+          <CreateEstimateDialog workspaceId={workspace.id} />
+        </div>
+        <EstimateList workspaceId={workspace.id} />
       </div>
     </div>
   );

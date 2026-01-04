@@ -55,6 +55,12 @@ export class PermissionsService {
       PERMISSIONS.USERS_UPDATE,
       PERMISSIONS.USERS_DELETE,
       PERMISSIONS.USERS_VIEW,
+
+      // Estimates - полный доступ
+      PERMISSIONS.ESTIMATES_CREATE,
+      PERMISSIONS.ESTIMATES_UPDATE,
+      PERMISSIONS.ESTIMATES_DELETE,
+      PERMISSIONS.ESTIMATES_VIEW,
     ];
   }
 
@@ -73,6 +79,12 @@ export class PermissionsService {
       PERMISSIONS.WORKSPACES_VIEW_HISTORY,
       // НЕТ: WORKSPACES_DELETE_PERMANENT (только ADMIN)
       // НЕТ: все разрешения для users
+
+      // Estimates - управление сметами в своих workspace
+      PERMISSIONS.ESTIMATES_CREATE,
+      PERMISSIONS.ESTIMATES_UPDATE,
+      PERMISSIONS.ESTIMATES_DELETE,
+      PERMISSIONS.ESTIMATES_VIEW,
     ];
   }
 
@@ -84,6 +96,10 @@ export class PermissionsService {
       // Workspaces - только просмотр истории
       PERMISSIONS.WORKSPACES_VIEW_HISTORY,
       // НЕТ: все остальные разрешения
+
+      // Estimates - только просмотр
+      PERMISSIONS.ESTIMATES_VIEW,
+      // НЕТ: CREATE, UPDATE, DELETE
     ];
   }
 

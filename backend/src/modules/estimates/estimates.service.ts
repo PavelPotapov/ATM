@@ -16,12 +16,21 @@ import { CreateEstimateDto } from './dto/create-estimate.dto';
 import { UpdateEstimateDto } from './dto/update-estimate.dto';
 import { CreateEstimateColumnDto } from './dto/create-estimate-column.dto';
 import { UpdateEstimateColumnDto } from './dto/update-estimate-column.dto';
+import { CreateColumnPermissionDto } from './dto/create-column-permission.dto';
+import { UpdateColumnPermissionDto } from './dto/update-column-permission.dto';
 import {
   EstimateWithTimestamps,
   EstimateWithCreator,
-  EstimateWithColumns,
   EstimateFull,
 } from './types/estimate.types';
+import {
+  EstimateColumnFull,
+  ColumnRolePermissionType,
+} from './types/estimate-column.types';
+import {
+  ColumnHistoryType,
+  ColumnHistoryAction,
+} from './types/column-history.types';
 import { AuthenticatedUser } from '../users/types/user.types';
 import { Role } from '@prisma/client';
 
@@ -282,7 +291,7 @@ export class EstimatesService {
    * @param user - текущий пользователь
    */
   async remove(id: string, user: AuthenticatedUser): Promise<void> {
-    const estimate = await this.findOne(id, user);
+    await this.findOne(id, user);
 
     await this.prisma.estimate.update({
       where: { id },
@@ -311,7 +320,7 @@ export class EstimatesService {
     }
 
     // Проверяем, что смета существует и у пользователя есть доступ
-    const estimate = await this.findOne(createColumnDto.estimateId, user);
+    await this.findOne(createColumnDto.estimateId, user);
 
     // Проверяем, что столбец с таким порядком не существует
     const existingColumn = await this.prisma.estimateColumn.findFirst({
@@ -358,6 +367,25 @@ export class EstimatesService {
         allowedValues: true,
         createdAt: true,
         updatedAt: true,
+      },
+    });
+
+    // Логируем создание столбца
+    await this.prisma.columnHistory.create({
+      data: {
+        columnId: column.id,
+        userId: user.id,
+        action: ColumnHistoryAction.CREATED,
+        field: null,
+        oldValue: null,
+        newValue: JSON.stringify({
+          name: column.name,
+          dataType: column.dataType,
+          order: column.order,
+          required: column.required,
+          allowedValues: column.allowedValues,
+        }),
+        metadata: null,
       },
     });
 
@@ -410,8 +438,7 @@ export class EstimatesService {
     // Преобразуем allowedValues в JSON строку, если это ENUM тип
     let allowedValuesJson: string | null = column.allowedValues;
     if (
-      (updateColumnDto.dataType === 'ENUM' ||
-        column.dataType === 'ENUM') &&
+      (updateColumnDto.dataType === 'ENUM' || column.dataType === 'ENUM') &&
       updateColumnDto.allowedValues !== undefined
     ) {
       if (updateColumnDto.allowedValues.length > 0) {
@@ -452,6 +479,90 @@ export class EstimatesService {
       },
     });
 
+    // Логируем изменения столбца
+    const historyEntries: Array<{
+      columnId: string;
+      userId: string;
+      action: ColumnHistoryAction;
+      field: string;
+      oldValue: string | null;
+      newValue: string | null;
+      metadata: string | null;
+    }> = [];
+    if (updateColumnDto.name && updateColumnDto.name !== column.name) {
+      historyEntries.push({
+        columnId: column.id,
+        userId: user.id,
+        action: ColumnHistoryAction.UPDATED,
+        field: 'name',
+        oldValue: column.name,
+        newValue: updateColumnDto.name,
+        metadata: null,
+      });
+    }
+    if (
+      updateColumnDto.dataType !== undefined &&
+      updateColumnDto.dataType !== column.dataType
+    ) {
+      historyEntries.push({
+        columnId: column.id,
+        userId: user.id,
+        action: ColumnHistoryAction.UPDATED,
+        field: 'dataType',
+        oldValue: column.dataType,
+        newValue: updateColumnDto.dataType,
+        metadata: null,
+      });
+    }
+    if (
+      updateColumnDto.order !== undefined &&
+      updateColumnDto.order !== column.order
+    ) {
+      historyEntries.push({
+        columnId: column.id,
+        userId: user.id,
+        action: ColumnHistoryAction.UPDATED,
+        field: 'order',
+        oldValue: String(column.order),
+        newValue: String(updateColumnDto.order),
+        metadata: null,
+      });
+    }
+    if (
+      updateColumnDto.required !== undefined &&
+      updateColumnDto.required !== column.required
+    ) {
+      historyEntries.push({
+        columnId: column.id,
+        userId: user.id,
+        action: ColumnHistoryAction.UPDATED,
+        field: 'required',
+        oldValue: String(column.required),
+        newValue: String(updateColumnDto.required),
+        metadata: null,
+      });
+    }
+    if (
+      allowedValuesJson !== undefined &&
+      allowedValuesJson !== column.allowedValues
+    ) {
+      historyEntries.push({
+        columnId: column.id,
+        userId: user.id,
+        action: ColumnHistoryAction.UPDATED,
+        field: 'allowedValues',
+        oldValue: column.allowedValues,
+        newValue: allowedValuesJson,
+        metadata: null,
+      });
+    }
+
+    if (historyEntries.length > 0) {
+      await this.prisma.columnHistory.createMany({
+        data: historyEntries,
+      });
+    }
+
     return updated;
   }
 
@@ -480,5 +591,398 @@ export class EstimatesService {
       where: { id: columnId },
     });
   }
-}
 
+  /**
+   * Получение столбца с полной информацией (создатель и разрешения)
+   * @param columnId - ID столбца
+   * @param user - текущий пользователь
+   * @returns полная информация о столбце
+   */
+  async findColumnFull(
+    columnId: string,
+    user: AuthenticatedUser,
+  ): Promise<EstimateColumnFull> {
+    const column = await this.prisma.estimateColumn.findUnique({
+      where: { id: columnId },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        estimate: true,
+        permissions: {
+          select: {
+            id: true,
+            columnId: true,
+            role: true,
+            canView: true,
+            canEdit: true,
+            canCreate: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
+    });
+
+    if (!column) {
+      throw new NotFoundException('Столбец не найден');
+    }
+
+    // Проверяем доступ к смете
+    await this.checkWorkspaceAccess(column.estimate.workspaceId, user);
+
+    return {
+      id: column.id,
+      estimateId: column.estimateId,
+      createdById: column.createdById,
+      name: column.name,
+      dataType: column.dataType,
+      order: column.order,
+      required: column.required,
+      allowedValues: column.allowedValues,
+      createdAt: column.createdAt,
+      updatedAt: column.updatedAt,
+      createdBy: column.createdBy,
+      rolePermissions: column.permissions.map((perm) => ({
+        id: perm.id,
+        columnId: perm.columnId,
+        role: perm.role,
+        canView: perm.canView,
+        canEdit: perm.canEdit,
+        canCreate: perm.canCreate,
+        createdAt: perm.createdAt,
+        updatedAt: perm.updatedAt,
+      })),
+    };
+  }
+
+  /**
+   * Создание разрешения на столбец для роли
+   * @param createPermissionDto - данные для создания разрешения
+   * @param user - текущий пользователь
+   * @returns созданное разрешение
+   */
+  async createColumnPermission(
+    createPermissionDto: CreateColumnPermissionDto,
+    user: AuthenticatedUser,
+  ): Promise<ColumnRolePermissionType> {
+    // Только ADMIN и MANAGER могут управлять разрешениями
+    if (user.role === Role.WORKER) {
+      throw new ForbiddenException(
+        'Работники не могут управлять разрешениями на столбцы',
+      );
+    }
+
+    // Проверяем, что столбец существует и у пользователя есть доступ
+    const column = await this.prisma.estimateColumn.findUnique({
+      where: { id: createPermissionDto.columnId },
+      include: {
+        estimate: true,
+      },
+    });
+
+    if (!column) {
+      throw new NotFoundException('Столбец не найден');
+    }
+
+    // Проверяем доступ к смете
+    await this.checkWorkspaceAccess(column.estimate.workspaceId, user);
+
+    // Проверяем, не существует ли уже разрешение для этой роли
+    const existing = await this.prisma.columnRolePermission.findFirst({
+      where: {
+        columnId: createPermissionDto.columnId,
+        role: createPermissionDto.role,
+      },
+    });
+
+    if (existing) {
+      throw new BadRequestException(
+        `Разрешение для роли ${createPermissionDto.role} уже существует`,
+      );
+    }
+
+    const permission = await this.prisma.columnRolePermission.create({
+      data: {
+        columnId: createPermissionDto.columnId,
+        role: createPermissionDto.role,
+        canView: createPermissionDto.canView,
+        canEdit: createPermissionDto.canEdit,
+        canCreate: createPermissionDto.canCreate,
+      },
+      select: {
+        id: true,
+        columnId: true,
+        role: true,
+        canView: true,
+        canEdit: true,
+        canCreate: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    // Логируем создание разрешения
+    await this.prisma.columnHistory.create({
+      data: {
+        columnId: createPermissionDto.columnId,
+        userId: user.id,
+        action: ColumnHistoryAction.PERMISSION_CHANGED,
+        field: 'permission',
+        oldValue: null,
+        newValue: JSON.stringify({
+          role: permission.role,
+          canView: permission.canView,
+          canEdit: permission.canEdit,
+        }),
+        metadata: JSON.stringify({
+          permissionId: permission.id,
+          role: permission.role,
+        }),
+      },
+    });
+
+    return permission;
+  }
+
+  /**
+   * Обновление разрешения на столбец для роли
+   * @param permissionId - ID разрешения
+   * @param updatePermissionDto - данные для обновления
+   * @param user - текущий пользователь
+   * @returns обновленное разрешение
+   */
+  async updateColumnPermission(
+    permissionId: string,
+    updatePermissionDto: UpdateColumnPermissionDto,
+    user: AuthenticatedUser,
+  ): Promise<ColumnRolePermissionType> {
+    // Только ADMIN и MANAGER могут управлять разрешениями
+    if (user.role === Role.WORKER) {
+      throw new ForbiddenException(
+        'Работники не могут управлять разрешениями на столбцы',
+      );
+    }
+
+    const permission = await this.prisma.columnRolePermission.findUnique({
+      where: { id: permissionId },
+      include: {
+        column: {
+          include: {
+            estimate: true,
+          },
+        },
+      },
+    });
+
+    if (!permission) {
+      throw new NotFoundException('Разрешение не найдено');
+    }
+
+    // Проверяем доступ к смете
+    await this.checkWorkspaceAccess(
+      permission.column.estimate.workspaceId,
+      user,
+    );
+
+    const updated = await this.prisma.columnRolePermission.update({
+      where: { id: permissionId },
+      data: {
+        ...(updatePermissionDto.canView !== undefined && {
+          canView: updatePermissionDto.canView,
+        }),
+        ...(updatePermissionDto.canEdit !== undefined && {
+          canEdit: updatePermissionDto.canEdit,
+        }),
+        ...(updatePermissionDto.canCreate !== undefined && {
+          canCreate: updatePermissionDto.canCreate,
+        }),
+      },
+      select: {
+        id: true,
+        columnId: true,
+        role: true,
+        canView: true,
+        canEdit: true,
+        canCreate: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    // Логируем изменение разрешения
+    const historyEntries: Array<{
+      columnId: string;
+      userId: string;
+      action: ColumnHistoryAction;
+      field: string;
+      oldValue: string;
+      newValue: string;
+      metadata: string;
+    }> = [];
+    if (
+      updatePermissionDto.canView !== undefined &&
+      updatePermissionDto.canView !== permission.canView
+    ) {
+      historyEntries.push({
+        columnId: permission.columnId,
+        userId: user.id,
+        action: ColumnHistoryAction.PERMISSION_CHANGED,
+        field: `permission.${permission.role}.canView`,
+        oldValue: String(permission.canView),
+        newValue: String(updatePermissionDto.canView),
+        metadata: JSON.stringify({
+          permissionId: permission.id,
+          role: permission.role,
+        }),
+      });
+    }
+    if (
+      updatePermissionDto.canEdit !== undefined &&
+      updatePermissionDto.canEdit !== permission.canEdit
+    ) {
+      historyEntries.push({
+        columnId: permission.columnId,
+        userId: user.id,
+        action: ColumnHistoryAction.PERMISSION_CHANGED,
+        field: `permission.${permission.role}.canEdit`,
+        oldValue: String(permission.canEdit),
+        newValue: String(updatePermissionDto.canEdit),
+        metadata: JSON.stringify({
+          permissionId: permission.id,
+          role: permission.role,
+        }),
+      });
+    }
+
+    if (historyEntries.length > 0) {
+      await this.prisma.columnHistory.createMany({
+        data: historyEntries,
+      });
+    }
+
+    return updated;
+  }
+
+  /**
+   * Удаление разрешения на столбец для роли
+   * @param permissionId - ID разрешения
+   * @param user - текущий пользователь
+   */
+  async removeColumnPermission(
+    permissionId: string,
+    user: AuthenticatedUser,
+  ): Promise<void> {
+    // Только ADMIN и MANAGER могут управлять разрешениями
+    if (user.role === Role.WORKER) {
+      throw new ForbiddenException(
+        'Работники не могут управлять разрешениями на столбцы',
+      );
+    }
+
+    const permission = await this.prisma.columnRolePermission.findUnique({
+      where: { id: permissionId },
+      include: {
+        column: {
+          include: {
+            estimate: true,
+          },
+        },
+      },
+    });
+
+    if (!permission) {
+      throw new NotFoundException('Разрешение не найдено');
+    }
+
+    // Проверяем доступ к смете
+    await this.checkWorkspaceAccess(
+      permission.column.estimate.workspaceId,
+      user,
+    );
+
+    // Логируем удаление разрешения
+    await this.prisma.columnHistory.create({
+      data: {
+        columnId: permission.columnId,
+        userId: user.id,
+        action: ColumnHistoryAction.PERMISSION_CHANGED,
+        field: 'permission',
+        oldValue: JSON.stringify({
+          role: permission.role,
+          canView: permission.canView,
+          canEdit: permission.canEdit,
+        }),
+        newValue: null,
+        metadata: JSON.stringify({
+          permissionId: permission.id,
+          role: permission.role,
+        }),
+      },
+    });
+
+    await this.prisma.columnRolePermission.delete({
+      where: { id: permissionId },
+    });
+  }
+
+  /**
+   * Получение истории изменений столбца
+   * @param columnId - ID столбца
+   * @param user - текущий пользователь
+   * @returns список записей истории
+   */
+  async getColumnHistory(
+    columnId: string,
+    user: AuthenticatedUser,
+  ): Promise<ColumnHistoryType[]> {
+    const column = await this.prisma.estimateColumn.findUnique({
+      where: { id: columnId },
+      include: {
+        estimate: true,
+      },
+    });
+
+    if (!column) {
+      throw new NotFoundException('Столбец не найден');
+    }
+
+    // Проверяем доступ к смете
+    await this.checkWorkspaceAccess(column.estimate.workspaceId, user);
+
+    const history = await this.prisma.columnHistory.findMany({
+      where: { columnId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return history.map((h) => ({
+      id: h.id,
+      columnId: h.columnId,
+      userId: h.userId,
+      action: h.action,
+      field: h.field,
+      oldValue: h.oldValue,
+      newValue: h.newValue,
+      metadata: h.metadata,
+      createdAt: h.createdAt,
+      user: h.user,
+    }));
+  }
+}
