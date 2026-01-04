@@ -17,8 +17,18 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Настройка CORS для работы с фронтендом
+  // В production: разрешаем все origins (так как фронтенд и API на одном домене через ngrok)
+  // В development: используем FRONTEND_URL из .env
+  const isProduction = process.env.NODE_ENV === 'production';
+  const frontendUrls = isProduction
+    ? true // В production разрешаем все origins (фронтенд и API на одном домене)
+    : (process.env.FRONTEND_URL || 'http://localhost:5173')
+        .split(',')
+        .map((url) => url.trim())
+        .filter(Boolean);
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173', // URL фронтенда
+    origin: frontendUrls, // В production: true (все origins), в dev: конкретные URLs
     credentials: true, // Разрешаем отправку cookies (для refresh token)
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
