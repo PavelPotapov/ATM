@@ -6,6 +6,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData } from '@tanstack/react-query';
 import { getEstimateTableData } from '../queries/getEstimateTableData';
 import { estimatesKeys } from '../queryKeys';
 
@@ -19,6 +20,7 @@ export const useEstimateTableData = (estimateId: string) => {
     queryKey: estimatesKeys.table(estimateId).queryKey,
     queryFn: () => getEstimateTableData(estimateId),
     enabled: !!estimateId,
+    placeholderData: keepPreviousData, // Сохраняем предыдущие данные во время обновления
   });
 };
 

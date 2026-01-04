@@ -12,6 +12,7 @@ import {
   DataTableColumnHeader,
   type DataTableFilterField,
 } from '@/widgets/table';
+import { isAfter, isBefore, isSameDay } from 'date-fns';
 import {
   useEstimateTableData,
   useUpdateCell,
@@ -124,7 +125,7 @@ export function EstimateTable({ estimateId }: EstimateTableProps) {
           } | undefined;
           return cellData?.value ?? null;
         },
-        // Кастомная функция фильтрации для checkbox (массив значений)
+        // Кастомная функция фильтрации в зависимости от типа данных
         filterFn: (row, columnId, filterValue) => {
           // Если фильтр не установлен (null, undefined, пустая строка) - пропускаем все строки
           if (filterValue === null || filterValue === undefined || filterValue === '') {
@@ -140,9 +141,42 @@ export function EstimateTable({ estimateId }: EstimateTableProps) {
           } | undefined;
           
           const cellValue = cellData?.value;
+          const cellDataType = cellData?.dataType;
           if (!cellValue) return false;
           
-          // Если фильтр - массив значений (checkbox)
+          // Для DATE столбцов используем inDateRange
+          if (cellDataType === 'DATE') {
+            // Преобразуем строку в Date для фильтрации
+            const cellDate = new Date(cellValue);
+            if (Number.isNaN(cellDate.getTime())) return false;
+            
+            // Используем логику inDateRange для фильтрации
+            // Если value - массив дат [start, end]
+            if (Array.isArray(filterValue)) {
+              const dates = filterValue.filter((v) => v instanceof Date) as Date[];
+              if (dates.length === 0) return false;
+              
+              const [start, end] = dates;
+              
+              // Если нет конечной даты, проверяем, что это тот же день
+              if (!end) {
+                return isSameDay(cellDate, start);
+              }
+              
+              // Проверяем, что дата попадает в диапазон
+              return (isAfter(cellDate, start) || isSameDay(cellDate, start)) && 
+                     (isBefore(cellDate, end) || isSameDay(cellDate, end));
+            }
+            
+            // Если value - одна дата
+            if (filterValue instanceof Date) {
+              return isSameDay(cellDate, filterValue);
+            }
+            
+            return false;
+          }
+          
+          // Если фильтр - массив значений (checkbox для ENUM/BOOLEAN)
           if (Array.isArray(filterValue)) {
             // Преобразуем все значения в строки для сравнения
             return filterValue.some(
@@ -223,7 +257,31 @@ export function EstimateTable({ estimateId }: EstimateTableProps) {
         };
       }
 
-      // Для NUMBER столбцов можно использовать slider (пока используем input)
+      // Для BOOLEAN столбцов используем checkbox фильтр с опциями Да/Нет
+      if (col.dataType === 'BOOLEAN') {
+        return {
+          type: 'checkbox' as const,
+          label: col.name,
+          value: col.id,
+          commandDisabled: false,
+          options: [
+            { label: 'Да', value: 'true' },
+            { label: 'Нет', value: 'false' },
+          ],
+        };
+      }
+
+      // Для DATE столбцов используем timerange фильтр
+      if (col.dataType === 'DATE') {
+        return {
+          type: 'timerange' as const,
+          label: col.name,
+          value: col.id,
+          commandDisabled: false,
+        };
+      }
+
+      // Для NUMBER столбцов используем input (можно будет добавить slider позже)
       if (col.dataType === 'NUMBER') {
         return {
           type: 'input' as const,
@@ -233,7 +291,7 @@ export function EstimateTable({ estimateId }: EstimateTableProps) {
         };
       }
 
-      // Для остальных - input фильтр
+      // Для STRING и остальных - input фильтр
       return {
         type: 'input' as const,
         label: col.name,
@@ -290,6 +348,7 @@ export function EstimateTable({ estimateId }: EstimateTableProps) {
       filterFields={filterFields}
       isLoading={isLoading}
       getRowId={(row) => (row._rowId as string) || ''}
+      paginationKey={`estimate-${estimateId}`}
       renderActions={() => (
         <Button onClick={handleAddRow} disabled={isCreatingRow} size="sm">
           <Plus className="h-4 w-4 mr-2" />

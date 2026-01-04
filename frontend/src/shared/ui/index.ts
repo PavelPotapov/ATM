@@ -61,8 +61,12 @@ export * from './calendar';
 // Hover Card
 export * from './hover-card';
 
+// Popover
+export * from './popover';
+
 // Kbd
 export * from './kbd';
+export * from './date-picker-with-range';
 
 // Checkbox
 export * from './checkbox';

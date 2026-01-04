@@ -16,6 +16,7 @@ export * from './DataTableFilterCommand';
 export * from './DataTableFilterCheckbox';
 export * from './DataTableFilterInput';
 export * from './DataTableFilterSlider';
+export * from './DataTableFilterTimerange';
 export * from './DataTableFilterChips';
 export * from './DataTablePagination';
 export * from './DataTableSheet';

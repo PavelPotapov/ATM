@@ -73,6 +73,11 @@ export interface DataTableEnhancedProps<TData, TValue> {
   renderSheetContent?: (row: TData) => React.ReactNode;
   getRowId?: (row: TData) => string;
   getRowClassName?: (row: TData) => string;
+  /**
+   * Уникальный ключ для сохранения пагинации в localStorage.
+   * Если не указан, пагинация не сохраняется между сессиями.
+   */
+  paginationKey?: string;
 }
 
 export function DataTableEnhanced<TData, TValue>({
@@ -90,6 +95,7 @@ export function DataTableEnhanced<TData, TValue>({
   renderSheetContent,
   getRowId,
   getRowClassName,
+  paginationKey,
 }: DataTableEnhancedProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
@@ -105,10 +111,52 @@ export function DataTableEnhanced<TData, TValue>({
     'data-table-visibility',
     defaultColumnVisibility,
   );
-  const [pagination, setPagination] = React.useState<PaginationState>({
+  
+  // Сохраняем пагинацию в localStorage, если указан ключ
+  const defaultPagination: PaginationState = {
     pageIndex: 0,
     pageSize: 10,
-  });
+  };
+  
+  const [paginationLS, setPaginationLS] = useLocalStorage<PaginationState>(
+    paginationKey ? `data-table-pagination-${paginationKey}` : 'data-table-pagination-temp',
+    defaultPagination,
+  );
+  
+  const [paginationState, setPaginationState] = React.useState<PaginationState>(defaultPagination);
+  
+  // Используем localStorage, если указан ключ, иначе обычный state
+  const pagination = paginationKey ? paginationLS : paginationState;
+  const setPagination = paginationKey ? setPaginationLS : setPaginationState;
+  
+  // Отслеживаем предыдущие фильтры, чтобы определить, изменились ли они
+  const previousColumnFiltersRef = React.useRef<ColumnFiltersState>(columnFilters);
+  
+  // Сбрасываем пагинацию при изменении фильтров (но не при обновлении данных)
+  React.useEffect(() => {
+    const currentFilters = columnFilters;
+    const previousFilters = previousColumnFiltersRef.current;
+    
+    // Сравниваем фильтры (проверяем, изменились ли они)
+    const filtersChanged = 
+      currentFilters.length !== previousFilters.length ||
+      currentFilters.some((filter, index) => {
+        const prevFilter = previousFilters[index];
+        return !prevFilter || 
+               prevFilter.id !== filter.id || 
+               JSON.stringify(prevFilter.value) !== JSON.stringify(filter.value);
+      });
+    
+    // Если фильтры изменились - сбрасываем пагинацию на первую страницу
+    if (filtersChanged && pagination.pageIndex > 0) {
+      console.log('[DataTableEnhanced] Filters changed, resetting pagination to first page');
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    }
+    
+    // Обновляем ref
+    previousColumnFiltersRef.current = columnFilters;
+  }, [columnFilters, pagination.pageIndex, setPagination]);
+  
 
   // Кастомная функция для getFacetedUniqueValues, которая работает с вложенной структурой
   // Создаем свою реализацию, которая использует accessorFn из колонок
@@ -171,6 +219,9 @@ export function DataTableEnhanced<TData, TValue>({
     },
     enableRowSelection: !!renderSheetContent,
     enableMultiRowSelection: false,
+    // Отключаем автоматический сброс пагинации при изменении данных
+    // Сброс при фильтрации обрабатываем вручную через useEffect
+    autoResetPageIndex: false,
     onColumnVisibilityChange: setColumnVisibility,
     onColumnFiltersChange: setColumnFilters,
     onSortingChange: setSorting,

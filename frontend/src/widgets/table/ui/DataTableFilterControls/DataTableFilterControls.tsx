@@ -16,6 +16,7 @@ import { DataTableFilterChips } from '../DataTableFilterChips';
 import { DataTableFilterCheckbox } from '../DataTableFilterCheckbox';
 import { DataTableFilterSlider } from '../DataTableFilterSlider';
 import { DataTableFilterInput } from '../DataTableFilterInput';
+import { DataTableFilterTimerange } from '../DataTableFilterTimerange';
 import { useDataTable } from '../../lib';
 
 export function DataTableFilterControls() {
@@ -72,8 +73,7 @@ export function DataTableFilterControls() {
                       return <DataTableFilterInput {...field} />;
                     }
                     case 'timerange': {
-                      // TODO: реализовать DataTableFilterTimerange
-                      return null;
+                      return <DataTableFilterTimerange {...field} />;
                     }
                   }
                 })()}

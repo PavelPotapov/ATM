@@ -125,6 +125,45 @@ export const useUpdateCell = () => {
       // Возвращаем контекст с предыдущими данными для отката
       return { previousData };
     },
+    onSuccess: (data, variables) => {
+      // Обновляем данные с реальным cellId из ответа (если создавали новую ячейку)
+      const currentData = queryClient.getQueryData<EstimateTableDataDto>(
+        estimatesKeys.table(variables.estimateId).queryKey,
+      );
+
+      if (currentData && variables.cellId === 'new' && variables.data.rowId && variables.data.columnId) {
+        // Обновляем временный cellId на реальный из ответа
+        const updatedData: EstimateTableDataDto = {
+          ...currentData,
+          rows: currentData.rows.map((row) => {
+            if (row.id === variables.data.rowId) {
+              return {
+                ...row,
+                cells: row.cells.map((cell) =>
+                  cell.columnId === variables.data.columnId && cell.id.startsWith('temp-')
+                    ? {
+                        ...data,
+                        rowId: data.rowId,
+                        columnId: data.columnId,
+                        value: data.value,
+                        createdAt: data.createdAt,
+                        updatedAt: data.updatedAt,
+                      }
+                    : cell,
+                ),
+              };
+            }
+            return row;
+          }),
+        };
+
+        queryClient.setQueryData(
+          estimatesKeys.table(variables.estimateId).queryKey,
+          updatedData,
+        );
+      }
+      // Не делаем полный запрос - данные уже обновлены оптимистично
+    },
     onError: (err, variables, context) => {
       // Откатываем изменения при ошибке
       if (context?.previousData) {
@@ -134,13 +173,7 @@ export const useUpdateCell = () => {
         );
       }
     },
-    onSettled: (data, error, variables) => {
-      // После завершения (успех или ошибка) обновляем данные с сервера
-      // Но не инвалидируем полностью, чтобы сохранить пагинацию
-      queryClient.invalidateQueries({
-        queryKey: estimatesKeys.table(variables.estimateId).queryKey,
-      });
-    },
+    // Убрали onSettled - не делаем полный запрос, чтобы сохранить пагинацию
   });
 };
 
