@@ -13,6 +13,7 @@ import {
   EditEstimateColumnDialog,
   ColumnPermissionsDialog,
   DeleteEstimateColumnButton,
+  EstimateTable,
 } from '@/features/estimates';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Skeleton } from '@/shared/ui/skeleton';
@@ -215,11 +216,7 @@ export function EstimatePage() {
           </TabsContent>
 
           <TabsContent value="table" className="mt-6">
-            <div className="space-y-4">
-              <p className="text-muted-foreground">
-                Таблица данных будет здесь. Функционал в разработке.
-              </p>
-            </div>
+            <EstimateTable estimateId={estimateId} />
           </TabsContent>
         </Tabs>
       ) : (

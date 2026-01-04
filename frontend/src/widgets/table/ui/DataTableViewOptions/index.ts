@@ -1,0 +1,2 @@
+export { DataTableViewOptions } from './DataTableViewOptions';
+

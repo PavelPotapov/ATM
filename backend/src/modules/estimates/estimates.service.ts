@@ -1050,12 +1050,30 @@ export class EstimatesService {
         canEdit = user.role === Role.MANAGER;
       }
 
+      // Парсим allowedValues для ENUM типа
+      let parsedAllowedValues: string[] | null = null;
+      if (col.dataType === 'ENUM' && col.allowedValues) {
+        try {
+          const parsed: unknown = JSON.parse(col.allowedValues);
+          // Проверяем что это массив строк
+          if (
+            Array.isArray(parsed) &&
+            parsed.every((v) => typeof v === 'string')
+          ) {
+            parsedAllowedValues = parsed;
+          }
+        } catch {
+          parsedAllowedValues = null;
+        }
+      }
+
       return {
         id: col.id,
         name: col.name,
         dataType: col.dataType,
         order: col.order,
         canEdit,
+        allowedValues: parsedAllowedValues,
       };
     });
 

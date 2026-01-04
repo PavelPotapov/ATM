@@ -1,0 +1,2 @@
+export { DataTableFilterSlider } from './DataTableFilterSlider';
+

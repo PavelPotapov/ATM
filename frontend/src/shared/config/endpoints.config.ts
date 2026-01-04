@@ -112,6 +112,14 @@ export const API_ENDPOINTS = {
       normalizePath(`${API_PREFIX}${endpoints.ESTIMATES.UPDATE_COLUMN_PERMISSION(permissionId)}`),
     DELETE_COLUMN_PERMISSION: (permissionId: string) =>
       normalizePath(`${API_PREFIX}${endpoints.ESTIMATES.DELETE_COLUMN_PERMISSION(permissionId)}`),
+    GET_TABLE_DATA: (estimateId: string) =>
+      normalizePath(`${API_PREFIX}/estimates/${estimateId}/table`),
+    CREATE_ROW: (estimateId: string) =>
+      normalizePath(`${API_PREFIX}/estimates/${estimateId}/rows`),
+    DELETE_ROW: (rowId: string) =>
+      normalizePath(`${API_PREFIX}/estimates/rows/${rowId}`),
+    UPDATE_CELL: (cellId: string) =>
+      normalizePath(`${API_PREFIX}/estimates/cells/${cellId}`),
   },
 } as const;
 

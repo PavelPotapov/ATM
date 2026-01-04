@@ -6,4 +6,18 @@
 
 export { DataTable } from './DataTable';
 export type { ColumnDef, TanStackTable } from './DataTable';
+export { DataTableEnhanced } from './DataTableEnhanced';
+export type { DataTableEnhancedProps } from './DataTableEnhanced';
+export * from './DataTableResetButton';
+export * from './DataTableToolbar';
+export * from './DataTableViewOptions';
+export * from './DataTableFilterControls';
+export * from './DataTableFilterCommand';
+export * from './DataTableFilterCheckbox';
+export * from './DataTableFilterInput';
+export * from './DataTableFilterSlider';
+export * from './DataTableFilterChips';
+export * from './DataTablePagination';
+export * from './DataTableSheet';
+export * from './DataTableColumnHeader';
 

@@ -88,7 +88,7 @@ export function ColumnPermissionsDialog({
   }
 
   // Получаем разрешения для каждой роли (из локального состояния или из данных)
-  const getPermissionForRole = (role: Role) => {
+  const getPermissionForRole = (role: 'MANAGER' | 'WORKER') => {
     if (localPermissions[role]) {
       return localPermissions[role];
     }
@@ -100,7 +100,7 @@ export function ColumnPermissionsDialog({
 
   // Обработчик изменения локального состояния
   const handleLocalPermissionChange = (
-    role: Role,
+    role: 'MANAGER' | 'WORKER',
     field: 'canView' | 'canEdit',
     value: boolean,
   ) => {
@@ -114,7 +114,7 @@ export function ColumnPermissionsDialog({
   };
 
   // Сохранение изменений для роли
-  const handleSavePermissions = (role: Role) => {
+  const handleSavePermissions = (role: 'MANAGER' | 'WORKER') => {
     const local = localPermissions[role];
     if (!local) return;
 
@@ -159,7 +159,7 @@ export function ColumnPermissionsDialog({
   };
 
   // Проверяем, есть ли несохраненные изменения для роли
-  const hasUnsavedChanges = (role: Role) => {
+  const hasUnsavedChanges = (role: 'MANAGER' | 'WORKER') => {
     const local = localPermissions[role];
     if (!local) return false;
 

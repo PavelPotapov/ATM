@@ -16,5 +16,6 @@ export const estimatesKeys = createQueryKeys('estimates', {
   detail: (id: string) => [id],
   columns: (estimateId: string) => [estimateId, 'columns'],
   column: (columnId: string) => [columnId, 'column'],
+  table: (estimateId: string) => [estimateId, 'table'],
 });
 

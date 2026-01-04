@@ -46,6 +46,30 @@ export * from './textarea';
 // Tabs
 export * from './tabs';
 
+// Accordion
+export * from './accordion';
+
+// Slider
+export * from './slider';
+
+// Drawer
+export * from './drawer';
+
+// Calendar
+export * from './calendar';
+
+// Hover Card
+export * from './hover-card';
+
+// Kbd
+export * from './kbd';
+
+// Checkbox
+export * from './checkbox';
+
+// Input With Addons
+export * from './input-with-addons';
+
 // Sidebar
 export * from './sidebar';
 

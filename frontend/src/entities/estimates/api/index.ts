@@ -24,6 +24,14 @@ export type {
 } from './dto/column-permission.dto';
 export type { EstimateColumnFullDto } from './dto/estimate-column-full.dto';
 export type { ColumnHistoryDto } from './dto/column-history.dto';
+export type {
+  EstimateTableDataDto,
+  EstimateTableColumnDto,
+  EstimateTableRowDto,
+  EstimateTableCellDto,
+  CreateEstimateRowDto,
+  UpdateCellDto,
+} from './dto/estimate-table.dto';
 
 // Экспорт query keys
 export { estimatesKeys } from './queryKeys';
@@ -57,4 +65,8 @@ export { useColumnHistory } from './hooks/useColumnHistory';
 export { useCreateColumnPermission } from './hooks/useCreateColumnPermission';
 export { useUpdateColumnPermission } from './hooks/useUpdateColumnPermission';
 export { useDeleteColumnPermission } from './hooks/useDeleteColumnPermission';
+export { useEstimateTableData } from './hooks/useEstimateTableData';
+export { useCreateEstimateRow } from './hooks/useCreateEstimateRow';
+export { useDeleteEstimateRow } from './hooks/useDeleteEstimateRow';
+export { useUpdateCell } from './hooks/useUpdateCell';
 

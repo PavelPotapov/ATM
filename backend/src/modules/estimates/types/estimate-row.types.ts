@@ -46,6 +46,7 @@ export interface EstimateTableData {
     dataType: string;
     order: number;
     canEdit: boolean; // Может ли текущий пользователь редактировать этот столбец
+    allowedValues: string[] | null; // Разрешенные значения для ENUM типа
   }>;
   rows: EstimateRowWithCells[];
 }

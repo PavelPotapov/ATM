@@ -1,0 +1,2 @@
+export { DataTableFilterChips } from './DataTableFilterChips';
+
