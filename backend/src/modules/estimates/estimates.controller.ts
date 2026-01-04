@@ -656,22 +656,23 @@ export class EstimatesController {
   /**
    * PATCH /estimates/cells/:cellId
    * Обновление значения ячейки
+   * Если cellId = "new" и указаны rowId и columnId в body, создает новую ячейку
    */
   @Patch('cells/:cellId')
   @ApiOperation({
     summary: 'Обновление значения ячейки',
     description:
-      'Обновляет значение ячейки с проверкой прав доступа (canEdit) и логированием в историю',
+      'Обновляет значение ячейки с проверкой прав доступа (canEdit) и логированием в историю. Если cellId = "new" и указаны rowId и columnId, создает новую ячейку.',
   })
   @ApiParam({
     name: 'cellId',
-    description: 'ID ячейки',
+    description: 'ID ячейки или "new" для создания новой',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @ApiBody({ type: UpdateCellDto })
   @ApiResponse({
     status: 200,
-    description: 'Ячейка обновлена',
+    description: 'Ячейка обновлена или создана',
   })
   @ApiResponse({
     status: 401,
@@ -690,7 +691,8 @@ export class EstimatesController {
     @Body() updateCellDto: UpdateCellDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.estimatesService.updateCell(cellId, updateCellDto, user);
+    const actualCellId = cellId === 'new' ? null : cellId;
+    return this.estimatesService.updateCell(actualCellId, updateCellDto, user);
   }
 }
 

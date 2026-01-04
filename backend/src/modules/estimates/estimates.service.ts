@@ -1232,28 +1232,126 @@ export class EstimatesService {
 
   /**
    * Обновление значения ячейки
-   * @param cellId - ID ячейки
+   * Если ячейка не найдена, но указаны rowId и columnId, создает новую ячейку
+   * @param cellId - ID ячейки (может быть null, если создаем новую)
    * @param updateCellDto - данные для обновления
    * @param user - текущий пользователь
-   * @returns обновленная ячейка
+   * @returns обновленная или созданная ячейка
    */
   async updateCell(
-    cellId: string,
+    cellId: string | null,
     updateCellDto: UpdateCellDto,
     user: AuthenticatedUser,
   ): Promise<CellType> {
-    // Получаем ячейку со столбцом и сметой
-    const cell = await this.prisma.cell.findUnique({
-      where: { id: cellId },
-      include: {
-        column: {
+    const cell = cellId
+      ? await this.prisma.cell.findUnique({
+          where: { id: cellId },
           include: {
-            estimate: true,
+            column: {
+              include: {
+                estimate: true,
+              },
+            },
+          },
+        })
+      : null;
+
+    // Если ячейка не найдена, но указаны rowId и columnId, создаем новую
+    if (!cell && updateCellDto.rowId && updateCellDto.columnId) {
+      const rowId = String(updateCellDto.rowId);
+      const columnId = String(updateCellDto.columnId);
+
+      // Проверяем, что строка и столбец существуют
+      const row = await this.prisma.estimateRow.findUnique({
+        where: { id: rowId },
+        include: {
+          estimate: true,
+        },
+      });
+
+      if (!row) {
+        throw new NotFoundException('Строка не найдена');
+      }
+
+      const column = await this.prisma.estimateColumn.findUnique({
+        where: { id: columnId },
+        include: {
+          estimate: true,
+        },
+      });
+
+      if (!column) {
+        throw new NotFoundException('Столбец не найден');
+      }
+
+      // Проверяем, что строка и столбец принадлежат одной смете
+      if (row.estimateId !== column.estimateId) {
+        throw new BadRequestException(
+          'Строка и столбец должны принадлежать одной смете',
+        );
+      }
+
+      // Проверяем доступ к смете
+      await this.checkWorkspaceAccess(row.estimate.workspaceId, user);
+
+      // Проверяем права на редактирование столбца
+      if (user.role !== Role.ADMIN) {
+        const permission = await this.prisma.columnRolePermission.findFirst({
+          where: {
+            columnId: column.id,
+            role: user.role,
+          },
+        });
+
+        const canEdit = permission
+          ? permission.canEdit
+          : user.role === Role.MANAGER; // По умолчанию MANAGER может редактировать
+
+        if (!canEdit) {
+          throw new ForbiddenException(
+            'У вас нет прав на редактирование этого столбца',
+          );
+        }
+      }
+
+      // Создаем новую ячейку
+      const newCell = await this.prisma.cell.create({
+        data: {
+          rowId,
+          columnId,
+          value: updateCellDto.value ?? null,
+        },
+        include: {
+          column: {
+            include: {
+              estimate: true,
+            },
           },
         },
-      },
-    });
+      });
 
+      // Логируем создание в историю
+      await this.prisma.cellHistory.create({
+        data: {
+          cellId: newCell.id,
+          userId: user.id,
+          oldValue: null,
+          newValue: newCell.value,
+          reason: updateCellDto.reason ?? null,
+        },
+      });
+
+      return {
+        id: newCell.id,
+        rowId: newCell.rowId,
+        columnId: newCell.columnId,
+        value: newCell.value,
+        createdAt: newCell.createdAt,
+        updatedAt: newCell.updatedAt,
+      };
+    }
+
+    // Если ячейка не найдена и нет данных для создания
     if (!cell) {
       throw new NotFoundException('Ячейка не найдена');
     }
@@ -1271,7 +1369,7 @@ export class EstimatesService {
       });
 
       const canEdit = permission
-        ? permission.canEdit
+        ? Boolean(permission.canEdit)
         : user.role === Role.MANAGER; // По умолчанию MANAGER может редактировать
 
       if (!canEdit) {
@@ -1286,7 +1384,7 @@ export class EstimatesService {
 
     // Обновляем ячейку
     const updatedCell = await this.prisma.cell.update({
-      where: { id: cellId },
+      where: { id: cellId! },
       data: {
         value: updateCellDto.value ?? null,
       },

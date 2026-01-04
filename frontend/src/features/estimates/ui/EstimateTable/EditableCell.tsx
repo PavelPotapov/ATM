@@ -5,7 +5,8 @@
  * @created: 2025-01-04
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import * as React from 'react';
 import { Input } from '@/shared/ui/input';
 import {
   Select,
@@ -19,6 +20,7 @@ import type { ColumnDataType } from '@/entities/estimates';
 interface EditableCellProps {
   value: string | null;
   cellId: string | null;
+  rowId: string;
   columnId: string;
   dataType: ColumnDataType;
   canEdit: boolean;
@@ -34,6 +36,7 @@ interface EditableCellProps {
 export function EditableCell({
   value,
   cellId,
+  rowId,
   columnId,
   dataType,
   canEdit,
@@ -43,34 +46,78 @@ export function EditableCell({
 }: EditableCellProps) {
   const [localValue, setLocalValue] = useState(value ?? '');
   const [isEditing, setIsEditing] = useState(false);
+  const lastSavedValueRef = React.useRef<string | null>(value ?? null);
+  const justSavedRef = React.useRef(false);
+  const savedValueRef = React.useRef<string | null>(null);
 
-  // Синхронизируем локальное значение с пропсом
+  // Синхронизируем локальное значение с пропсом, но не сразу после сохранения
   useEffect(() => {
-    setLocalValue(value ?? '');
-  }, [value]);
+    // Если мы только что сохранили значение, не синхронизируем сразу
+    if (justSavedRef.current) {
+      // Проверяем, совпадает ли новое значение с тем, что мы сохранили
+      const normalizedValue = value ?? '';
+      const normalizedSaved = savedValueRef.current ?? '';
+      const normalizedLocal = localValue ?? '';
+      
+      // Если значение совпадает с сохраненным - обновляем refs и не меняем localValue
+      if (normalizedValue === normalizedSaved) {
+        lastSavedValueRef.current = value ?? null;
+        savedValueRef.current = null;
+        // Сбрасываем флаг через небольшую задержку, чтобы дать время оптимистичному обновлению
+        const timer = setTimeout(() => {
+          justSavedRef.current = false;
+        }, 250);
+        return () => clearTimeout(timer);
+      }
+      
+      // Если localValue совпадает с сохраненным, но value еще не обновился - ждем
+      if (normalizedLocal === normalizedSaved && normalizedValue !== normalizedSaved) {
+        const timer = setTimeout(() => {
+          justSavedRef.current = false;
+        }, 300);
+        return () => clearTimeout(timer);
+      }
+      
+      // Если значение не совпадает - возможно, пришло другое значение извне
+      // Но все равно не синхронизируем сразу, чтобы избежать мигания
+      const timer = setTimeout(() => {
+        justSavedRef.current = false;
+      }, 300);
+      return () => clearTimeout(timer);
+    }
 
-  // Если ячейка не создана (новый столбец), показываем пустое значение
-  if (!cellId) {
-    return (
-      <div className="px-2 py-1 text-sm text-muted-foreground">
-        <span className="italic">—</span>
-      </div>
-    );
-  }
+    // Если значение изменилось извне (не от нашего сохранения)
+    const normalizedValue = value ?? '';
+    const normalizedLastSaved = lastSavedValueRef.current ?? '';
+
+    if (normalizedValue !== normalizedLastSaved) {
+      setLocalValue(normalizedValue);
+      lastSavedValueRef.current = value ?? null;
+    }
+  }, [value, localValue]);
 
   // Если нельзя редактировать - показываем только для чтения
   if (!canEdit) {
     return (
       <div className="px-2 py-1 text-sm">
-        {formatValueForDisplay(value, dataType)}
+        {formatValueForDisplay(value, dataType) || (
+          <span className="text-muted-foreground italic">—</span>
+        )}
       </div>
     );
   }
 
+
   const handleBlur = () => {
     setIsEditing(false);
     if (localValue !== (value ?? '')) {
+      justSavedRef.current = true;
+      lastSavedValueRef.current = localValue;
       onUpdate(localValue);
+      // Сбрасываем флаг через небольшую задержку
+      setTimeout(() => {
+        justSavedRef.current = false;
+      }, 100);
     }
   };
 
@@ -91,6 +138,9 @@ export function EditableCell({
           value={localValue || 'false'}
           onValueChange={(val) => {
             setLocalValue(val);
+            justSavedRef.current = true;
+            savedValueRef.current = val;
+            lastSavedValueRef.current = val;
             onUpdate(val);
           }}
           disabled={isUpdating}
@@ -127,6 +177,9 @@ export function EditableCell({
           value={localValue || ''}
           onValueChange={(val) => {
             setLocalValue(val);
+            justSavedRef.current = true;
+            savedValueRef.current = val;
+            lastSavedValueRef.current = val;
             onUpdate(val);
           }}
           disabled={isUpdating}
@@ -197,9 +250,20 @@ export function EditableCell({
           return;
         }
         // Сохраняем как строку (API ожидает строку)
-        onUpdate(String(numValue));
+        const stringValue = String(numValue);
+        justSavedRef.current = true;
+        lastSavedValueRef.current = stringValue;
+        onUpdate(stringValue);
+        setTimeout(() => {
+          justSavedRef.current = false;
+        }, 100);
       } else if (localValue !== (value ?? '')) {
+        justSavedRef.current = true;
+        lastSavedValueRef.current = localValue;
         onUpdate(localValue);
+        setTimeout(() => {
+          justSavedRef.current = false;
+        }, 100);
       }
     };
 

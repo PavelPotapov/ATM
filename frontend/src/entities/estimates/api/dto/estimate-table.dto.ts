@@ -64,5 +64,7 @@ export interface CreateEstimateRowDto {
 export interface UpdateCellDto {
   value?: string;
   reason?: string;
+  rowId?: string; // Для создания ячейки, если её нет
+  columnId?: string; // Для создания ячейки, если её нет
 }
 

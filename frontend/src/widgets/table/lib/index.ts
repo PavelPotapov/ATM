@@ -6,4 +6,5 @@
 
 export { DataTableProvider, useDataTable } from './DataTableProvider';
 export { ControlsProvider, useControls } from './ControlsProvider';
+export { useFilterInput } from './useFilterInput';
 

@@ -171,6 +171,7 @@ export function EstimateTable({ estimateId }: EstimateTableProps) {
             <EditableCell
               value={cellData.value}
               cellId={cellData.cellId}
+              rowId={row.original._rowId as string}
               columnId={column.id}
               dataType={column.dataType}
               canEdit={cellData.canEdit}
@@ -180,13 +181,18 @@ export function EstimateTable({ estimateId }: EstimateTableProps) {
                   : null
               }
               onUpdate={(value) => {
-                if (cellData.cellId) {
-                  updateCell({
-                    cellId: cellData.cellId,
-                    estimateId,
-                    data: { value },
-                  });
-                }
+                // Если ячейка существует - обновляем, иначе создаем новую
+                const cellIdToUse = cellData.cellId || 'new';
+                updateCell({
+                  cellId: cellIdToUse,
+                  estimateId,
+                  data: {
+                    value,
+                    // Всегда передаем rowId и columnId для оптимистичного обновления
+                    rowId: row.original._rowId as string,
+                    columnId: column.id,
+                  },
+                });
               }}
               isUpdating={isUpdatingCell}
             />
