@@ -31,8 +31,15 @@ import {
   ColumnHistoryType,
   ColumnHistoryAction,
 } from './types/column-history.types';
+import {
+  EstimateTableData,
+  EstimateRowWithCells,
+  CellType,
+} from './types/estimate-row.types';
 import { AuthenticatedUser } from '../users/types/user.types';
 import { Role } from '@prisma/client';
+import { CreateEstimateRowDto } from './dto/create-estimate-row.dto';
+import { UpdateCellDto } from './dto/update-cell.dto';
 
 /**
  * EstimatesService - сервис для работы со сметами
@@ -253,8 +260,6 @@ export class EstimatesService {
     updateEstimateDto: UpdateEstimateDto,
     user: AuthenticatedUser,
   ): Promise<EstimateWithTimestamps> {
-    const estimate = await this.findOne(id, user);
-
     // Проверяем доступ к workspace (если workspaceId меняется)
     if (updateEstimateDto.workspaceId) {
       await this.checkWorkspaceAccess(updateEstimateDto.workspaceId, user);
@@ -984,5 +989,309 @@ export class EstimatesService {
       createdAt: h.createdAt,
       user: h.user,
     }));
+  }
+
+  /**
+   * Получение данных таблицы сметы (строки с ячейками)
+   * С учетом прав доступа - только видимые столбцы
+   * @param estimateId - ID сметы
+   * @param user - текущий пользователь
+   * @returns данные таблицы с учетом прав доступа
+   */
+  async getTableData(
+    estimateId: string,
+    user: AuthenticatedUser,
+  ): Promise<EstimateTableData> {
+    // Проверяем доступ к смете
+    await this.findOne(estimateId, user);
+
+    // Получаем все столбцы сметы
+    const columns = await this.prisma.estimateColumn.findMany({
+      where: {
+        estimateId,
+      },
+      orderBy: {
+        order: 'asc',
+      },
+    });
+
+    // Получаем разрешения для текущей роли пользователя
+    const permissions = await this.prisma.columnRolePermission.findMany({
+      where: {
+        columnId: { in: columns.map((c) => c.id) },
+        role: user.role,
+      },
+    });
+
+    const permissionMap = new Map(permissions.map((p) => [p.columnId, p]));
+
+    // Фильтруем столбцы по правам доступа (canView)
+    // ADMIN видит все столбцы
+    const visibleColumns =
+      user.role === Role.ADMIN
+        ? columns
+        : columns.filter((col) => {
+            const permission = permissionMap.get(col.id);
+            // Если разрешения нет - по умолчанию видим (для MANAGER)
+            return permission ? permission.canView : user.role === Role.MANAGER;
+          });
+
+    // Определяем, какие столбцы можно редактировать
+    const columnsWithPermissions = visibleColumns.map((col) => {
+      const permission = permissionMap.get(col.id);
+      let canEdit = false;
+
+      if (user.role === Role.ADMIN) {
+        canEdit = true; // ADMIN всегда может редактировать
+      } else if (permission) {
+        canEdit = permission.canEdit;
+      } else {
+        // По умолчанию MANAGER может редактировать, WORKER - нет
+        canEdit = user.role === Role.MANAGER;
+      }
+
+      return {
+        id: col.id,
+        name: col.name,
+        dataType: col.dataType,
+        order: col.order,
+        canEdit,
+      };
+    });
+
+    // Получаем все строки сметы
+    const rows = await this.prisma.estimateRow.findMany({
+      where: {
+        estimateId,
+      },
+      orderBy: {
+        order: 'asc',
+      },
+    });
+
+    // Получаем ячейки для всех строк и видимых столбцов
+    const rowIds = rows.map((r) => r.id);
+    const columnIds = visibleColumns.map((c) => c.id);
+
+    const cells = await this.prisma.cell.findMany({
+      where: {
+        rowId: { in: rowIds },
+        columnId: { in: columnIds },
+      },
+    });
+
+    // Группируем ячейки по строкам
+    const cellsByRow = new Map<string, typeof cells>();
+    cells.forEach((cell) => {
+      if (!cellsByRow.has(cell.rowId)) {
+        cellsByRow.set(cell.rowId, []);
+      }
+      cellsByRow.get(cell.rowId)!.push(cell);
+    });
+
+    // Формируем строки с ячейками
+    const rowsWithCells: EstimateRowWithCells[] = rows.map((row) => ({
+      id: row.id,
+      estimateId: row.estimateId,
+      order: row.order,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      cells: (cellsByRow.get(row.id) || []).map((cell) => ({
+        id: cell.id,
+        rowId: cell.rowId,
+        columnId: cell.columnId,
+        value: cell.value,
+        createdAt: cell.createdAt,
+        updatedAt: cell.updatedAt,
+      })),
+    }));
+
+    return {
+      columns: columnsWithPermissions,
+      rows: rowsWithCells,
+    };
+  }
+
+  /**
+   * Создание новой строки сметы
+   * @param createRowDto - данные для создания строки
+   * @param user - текущий пользователь
+   * @returns созданная строка
+   */
+  async createRow(
+    createRowDto: CreateEstimateRowDto,
+    user: AuthenticatedUser,
+  ): Promise<EstimateRowWithCells> {
+    // Проверяем доступ к смете
+    await this.findOne(createRowDto.estimateId, user);
+
+    // Определяем порядок (если не указан - добавляем в конец)
+    let order = createRowDto.order;
+    if (order === undefined) {
+      const maxOrder = await this.prisma.estimateRow.findFirst({
+        where: {
+          estimateId: createRowDto.estimateId,
+        },
+        orderBy: {
+          order: 'desc',
+        },
+        select: {
+          order: true,
+        },
+      });
+      order = maxOrder ? maxOrder.order + 1 : 0;
+    }
+
+    // Создаем строку
+    const row = await this.prisma.estimateRow.create({
+      data: {
+        estimateId: createRowDto.estimateId,
+        order,
+      },
+    });
+
+    // Создаем пустые ячейки для всех столбцов сметы
+    const columns = await this.prisma.estimateColumn.findMany({
+      where: {
+        estimateId: createRowDto.estimateId,
+      },
+    });
+
+    const cells = await Promise.all(
+      columns.map((col) =>
+        this.prisma.cell.create({
+          data: {
+            rowId: row.id,
+            columnId: col.id,
+            value: null,
+          },
+        }),
+      ),
+    );
+
+    return {
+      id: row.id,
+      estimateId: row.estimateId,
+      order: row.order,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      cells: cells.map((cell) => ({
+        id: cell.id,
+        rowId: cell.rowId,
+        columnId: cell.columnId,
+        value: cell.value,
+        createdAt: cell.createdAt,
+        updatedAt: cell.updatedAt,
+      })),
+    };
+  }
+
+  /**
+   * Удаление строки сметы
+   * @param rowId - ID строки
+   * @param user - текущий пользователь
+   */
+  async removeRow(rowId: string, user: AuthenticatedUser): Promise<void> {
+    // Получаем строку и проверяем доступ к смете
+    const row = await this.prisma.estimateRow.findUnique({
+      where: { id: rowId },
+      include: {
+        estimate: true,
+      },
+    });
+
+    if (!row) {
+      throw new NotFoundException('Строка не найдена');
+    }
+
+    await this.checkWorkspaceAccess(row.estimate.workspaceId, user);
+
+    // Удаляем строку (ячейки удалятся каскадно)
+    await this.prisma.estimateRow.delete({
+      where: { id: rowId },
+    });
+  }
+
+  /**
+   * Обновление значения ячейки
+   * @param cellId - ID ячейки
+   * @param updateCellDto - данные для обновления
+   * @param user - текущий пользователь
+   * @returns обновленная ячейка
+   */
+  async updateCell(
+    cellId: string,
+    updateCellDto: UpdateCellDto,
+    user: AuthenticatedUser,
+  ): Promise<CellType> {
+    // Получаем ячейку со столбцом и сметой
+    const cell = await this.prisma.cell.findUnique({
+      where: { id: cellId },
+      include: {
+        column: {
+          include: {
+            estimate: true,
+          },
+        },
+      },
+    });
+
+    if (!cell) {
+      throw new NotFoundException('Ячейка не найдена');
+    }
+
+    // Проверяем доступ к смете
+    await this.checkWorkspaceAccess(cell.column.estimate.workspaceId, user);
+
+    // Проверяем права на редактирование столбца
+    if (user.role !== Role.ADMIN) {
+      const permission = await this.prisma.columnRolePermission.findFirst({
+        where: {
+          columnId: cell.columnId,
+          role: user.role,
+        },
+      });
+
+      const canEdit = permission
+        ? permission.canEdit
+        : user.role === Role.MANAGER; // По умолчанию MANAGER может редактировать
+
+      if (!canEdit) {
+        throw new ForbiddenException(
+          'У вас нет прав на редактирование этого столбца',
+        );
+      }
+    }
+
+    // Сохраняем старое значение для истории
+    const oldValue = cell.value;
+
+    // Обновляем ячейку
+    const updatedCell = await this.prisma.cell.update({
+      where: { id: cellId },
+      data: {
+        value: updateCellDto.value ?? null,
+      },
+    });
+
+    // Логируем изменение в историю
+    await this.prisma.cellHistory.create({
+      data: {
+        cellId: cell.id,
+        userId: user.id,
+        oldValue,
+        newValue: updatedCell.value,
+        reason: updateCellDto.reason ?? null,
+      },
+    });
+
+    return {
+      id: updatedCell.id,
+      rowId: updatedCell.rowId,
+      columnId: updatedCell.columnId,
+      value: updatedCell.value,
+      createdAt: updatedCell.createdAt,
+      updatedAt: updatedCell.updatedAt,
+    };
   }
 }

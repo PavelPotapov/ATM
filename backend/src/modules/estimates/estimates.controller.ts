@@ -25,6 +25,7 @@ import {
   ApiParam,
   ApiBearerAuth,
   ApiQuery,
+  ApiBody,
 } from '@nestjs/swagger';
 import { EstimatesService } from './estimates.service';
 import { CreateEstimateDto } from './dto/create-estimate.dto';
@@ -33,6 +34,8 @@ import { CreateEstimateColumnDto } from './dto/create-estimate-column.dto';
 import { UpdateEstimateColumnDto } from './dto/update-estimate-column.dto';
 import { CreateColumnPermissionDto } from './dto/create-column-permission.dto';
 import { UpdateColumnPermissionDto } from './dto/update-column-permission.dto';
+import { CreateEstimateRowDto } from './dto/create-estimate-row.dto';
+import { UpdateCellDto } from './dto/update-cell.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../users/types/user.types';
@@ -543,6 +546,151 @@ export class EstimatesController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.estimatesService.getColumnHistory(columnId, user);
+  }
+
+  /**
+   * GET /estimates/:estimateId/table
+   * Получение данных таблицы сметы (строки с ячейками)
+   */
+  @Get(':estimateId/table')
+  @ApiOperation({
+    summary: 'Получение данных таблицы сметы',
+    description:
+      'Возвращает строки с ячейками с учетом прав доступа (только видимые столбцы)',
+  })
+  @ApiParam({
+    name: 'estimateId',
+    description: 'ID сметы',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Данные таблицы сметы',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Смета не найдена',
+  })
+  getTableData(
+    @Param('estimateId') estimateId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.estimatesService.getTableData(estimateId, user);
+  }
+
+  /**
+   * POST /estimates/:estimateId/rows
+   * Создание новой строки сметы
+   */
+  @Post(':estimateId/rows')
+  @ApiOperation({
+    summary: 'Создание новой строки сметы',
+    description: 'Создает новую строку с пустыми ячейками для всех столбцов',
+  })
+  @ApiParam({
+    name: 'estimateId',
+    description: 'ID сметы',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiBody({ type: CreateEstimateRowDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Строка создана',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Смета не найдена',
+  })
+  createRow(
+    @Param('estimateId') estimateId: string,
+    @Body() createRowDto: CreateEstimateRowDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.estimatesService.createRow(
+      { ...createRowDto, estimateId },
+      user,
+    );
+  }
+
+  /**
+   * DELETE /estimates/rows/:rowId
+   * Удаление строки сметы
+   */
+  @Delete('rows/:rowId')
+  @ApiOperation({
+    summary: 'Удаление строки сметы',
+    description: 'Удаляет строку и все её ячейки',
+  })
+  @ApiParam({
+    name: 'rowId',
+    description: 'ID строки',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Строка удалена',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Строка не найдена',
+  })
+  removeRow(
+    @Param('rowId') rowId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.estimatesService.removeRow(rowId, user);
+  }
+
+  /**
+   * PATCH /estimates/cells/:cellId
+   * Обновление значения ячейки
+   */
+  @Patch('cells/:cellId')
+  @ApiOperation({
+    summary: 'Обновление значения ячейки',
+    description:
+      'Обновляет значение ячейки с проверкой прав доступа (canEdit) и логированием в историю',
+  })
+  @ApiParam({
+    name: 'cellId',
+    description: 'ID ячейки',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiBody({ type: UpdateCellDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Ячейка обновлена',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Требуется аутентификация',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Недостаточно прав на редактирование столбца',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Ячейка не найдена',
+  })
+  updateCell(
+    @Param('cellId') cellId: string,
+    @Body() updateCellDto: UpdateCellDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.estimatesService.updateCell(cellId, updateCellDto, user);
   }
 }
 

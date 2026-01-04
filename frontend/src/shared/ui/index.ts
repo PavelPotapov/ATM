@@ -43,6 +43,9 @@ export * from './separator';
 // Textarea
 export * from './textarea';
 
+// Tabs
+export * from './tabs';
+
 // Sidebar
 export * from './sidebar';
 

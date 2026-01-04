@@ -12,10 +12,12 @@ import {
   ColumnDetailsDialog,
   EditEstimateColumnDialog,
   ColumnPermissionsDialog,
+  DeleteEstimateColumnButton,
 } from '@/features/estimates';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { Badge } from '@/shared/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 
 export function EstimatePage() {
   const { estimateId } = useParams({ strict: false });
@@ -89,116 +91,168 @@ export function EstimatePage() {
         {estimateFull && <DeleteEstimateButton estimate={estimate} />}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Информация</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 text-sm">
-              <div>
-                <span className="font-medium">Создатель:</span>{' '}
-                <span className="text-muted-foreground">
-                  {estimate.createdBy.firstName && estimate.createdBy.lastName
-                    ? `${estimate.createdBy.firstName} ${estimate.createdBy.lastName}`
-                    : estimate.createdBy.email}
-                </span>
-              </div>
-              <div>
-                <span className="font-medium">Создана:</span>{' '}
-                <span className="text-muted-foreground">
-                  {new Date(estimate.createdAt).toLocaleString('ru-RU')}
-                </span>
-              </div>
-              <div>
-                <span className="font-medium">Обновлена:</span>{' '}
-                <span className="text-muted-foreground">
-                  {new Date(estimate.updatedAt).toLocaleString('ru-RU')}
-                </span>
-              </div>
-              {estimateFull && (
-                <div>
-                  <span className="font-medium">Строк в смете:</span>{' '}
-                  <span className="text-muted-foreground">
-                    {estimateFull.rowsCount}
-                  </span>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {estimateFull ? (
+        <Tabs defaultValue="info" className="w-full">
+          <TabsList>
+            <TabsTrigger value="info">Информация</TabsTrigger>
+            <TabsTrigger value="table">Таблица</TabsTrigger>
+          </TabsList>
 
-      {estimateFull && (
-        <div>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Столбцы сметы</h2>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
-                Всего столбцов: {estimateFull.columns.length}
-              </span>
-              <CreateEstimateColumnDialog
-                estimateId={estimateId}
-                existingColumnsCount={estimateFull.columns.length}
-              />
-            </div>
-          </div>
-
-          {estimateFull.columns.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {estimateFull.columns.map((column) => (
-                <Card key={column.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <CardTitle className="text-base">{column.name}</CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">{column.dataType}</Badge>
-                        <div className="flex items-center gap-1">
-                          <ColumnDetailsDialog columnId={column.id} columnName={column.name} />
-                          <EditEstimateColumnDialog columnId={column.id} />
-                          <ColumnPermissionsDialog columnId={column.id} columnName={column.name} />
-                        </div>
-                      </div>
+          <TabsContent value="info" className="mt-6">
+            <div className="grid gap-4 md:grid-cols-2 mb-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Информация</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="font-medium">Создатель:</span>{' '}
+                      <span className="text-muted-foreground">
+                        {estimate.createdBy.firstName && estimate.createdBy.lastName
+                          ? `${estimate.createdBy.firstName} ${estimate.createdBy.lastName}`
+                          : estimate.createdBy.email}
+                      </span>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 text-sm">
-                      <div>
-                        <span className="font-medium">Порядок:</span>{' '}
-                        <span className="text-muted-foreground">{column.order}</span>
-                      </div>
-                      <div>
-                        <span className="font-medium">Обязательное:</span>{' '}
-                        <span className="text-muted-foreground">
-                          {column.required ? 'Да' : 'Нет'}
-                        </span>
-                      </div>
-                      {column.dataType === 'ENUM' && column.allowedValues && (
-                        <div>
-                          <span className="font-medium">Разрешенные значения:</span>
-                          <div className="mt-1 flex flex-wrap gap-1">
-                            {JSON.parse(column.allowedValues).map((value: string, idx: number) => (
-                              <Badge key={idx} variant="outline" className="text-xs">
-                                {value}
-                              </Badge>
-                            ))}
+                    <div>
+                      <span className="font-medium">Создана:</span>{' '}
+                      <span className="text-muted-foreground">
+                        {new Date(estimate.createdAt).toLocaleString('ru-RU')}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Обновлена:</span>{' '}
+                      <span className="text-muted-foreground">
+                        {new Date(estimate.updatedAt).toLocaleString('ru-RU')}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Строк в смете:</span>{' '}
+                      <span className="text-muted-foreground">
+                        {estimateFull.rowsCount}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-2xl font-bold">Столбцы сметы</h2>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-muted-foreground">
+                    Всего столбцов: {estimateFull.columns.length}
+                  </span>
+                  <CreateEstimateColumnDialog
+                    estimateId={estimateId}
+                    existingColumnsCount={estimateFull.columns.length}
+                  />
+                </div>
+              </div>
+
+              {estimateFull.columns.length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {estimateFull.columns.map((column) => (
+                    <Card key={column.id}>
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <CardTitle className="text-base">{column.name}</CardTitle>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">{column.dataType}</Badge>
+                            <div className="flex items-center gap-1">
+                              <ColumnDetailsDialog columnId={column.id} columnName={column.name} />
+                              <EditEstimateColumnDialog columnId={column.id} />
+                              <ColumnPermissionsDialog columnId={column.id} columnName={column.name} />
+                              <DeleteEstimateColumnButton
+                                columnId={column.id}
+                                columnName={column.name}
+                                estimateId={estimateId}
+                              />
+                            </div>
                           </div>
                         </div>
-                      )}
-                    </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          <div>
+                            <span className="font-medium">Порядок:</span>{' '}
+                            <span className="text-muted-foreground">{column.order}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium">Обязательное:</span>{' '}
+                            <span className="text-muted-foreground">
+                              {column.required ? 'Да' : 'Нет'}
+                            </span>
+                          </div>
+                          {column.dataType === 'ENUM' && column.allowedValues && (
+                            <div>
+                              <span className="font-medium">Разрешенные значения:</span>
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {JSON.parse(column.allowedValues).map((value: string, idx: number) => (
+                                  <Badge key={idx} variant="outline" className="text-xs">
+                                    {value}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-center text-muted-foreground">
+                      У сметы пока нет столбцов. Создайте первый столбец для начала работы.
+                    </p>
                   </CardContent>
                 </Card>
-              ))}
+              )}
             </div>
-          ) : (
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-center text-muted-foreground">
-                  У сметы пока нет столбцов. Создайте первый столбец для начала работы.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+          </TabsContent>
+
+          <TabsContent value="table" className="mt-6">
+            <div className="space-y-4">
+              <p className="text-muted-foreground">
+                Таблица данных будет здесь. Функционал в разработке.
+              </p>
+            </div>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Информация</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="font-medium">Создатель:</span>{' '}
+                  <span className="text-muted-foreground">
+                    {estimate.createdBy.firstName && estimate.createdBy.lastName
+                      ? `${estimate.createdBy.firstName} ${estimate.createdBy.lastName}`
+                      : estimate.createdBy.email}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-medium">Создана:</span>{' '}
+                  <span className="text-muted-foreground">
+                    {new Date(estimate.createdAt).toLocaleString('ru-RU')}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-medium">Обновлена:</span>{' '}
+                  <span className="text-muted-foreground">
+                    {new Date(estimate.updatedAt).toLocaleString('ru-RU')}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

@@ -10,4 +10,5 @@ export { CreateEstimateColumnDialog } from './ui/CreateEstimateColumnDialog';
 export { ColumnDetailsDialog } from './ui/ColumnDetailsDialog';
 export { EditEstimateColumnDialog } from './ui/EditEstimateColumnDialog';
 export { ColumnPermissionsDialog } from './ui/ColumnPermissionsDialog';
+export { DeleteEstimateColumnButton } from './ui/DeleteEstimateColumnButton';
 
