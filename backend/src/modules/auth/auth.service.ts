@@ -24,8 +24,17 @@ export interface JwtPayload {
 
 /**
  * Интерфейс для ответа при успешной аутентификации
+ * refresh_token не включается в JSON-ответ — передаётся через httpOnly cookie
  */
 export interface AuthResponse {
+  access_token: string;
+  user: AuthenticatedUser;
+}
+
+/**
+ * Полный результат логина (для внутреннего использования в контроллере)
+ */
+export interface LoginResult {
   access_token: string;
   refresh_token: string;
   user: AuthenticatedUser;
@@ -50,11 +59,7 @@ export class AuthService {
     private jwtService: JwtService,
     private prisma: PrismaService,
   ) {
-    const secret =
-      process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-    this.logger.log(`AuthService инициализирован`);
-    this.logger.log(`JWT_SECRET для создания токенов (полное): ${secret}`);
-    this.logger.log(`JWT_SECRET длина: ${secret.length} символов`);
+    this.logger.log('AuthService инициализирован');
   }
 
   /**
@@ -92,7 +97,7 @@ export class AuthService {
   /**
    * Вход в систему - проверяет credentials и возвращает JWT токен
    */
-  async login(loginDto: LoginDto): Promise<AuthResponse> {
+  async login(loginDto: LoginDto): Promise<LoginResult> {
     const user = await this.validateUser(loginDto.email, loginDto.password);
 
     if (!user) {

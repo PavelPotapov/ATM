@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { config } from 'dotenv';
+import cookieParser from 'cookie-parser';
 import { setupSwagger } from './common/config/swagger.config';
 import { getApiPrefix } from './common/config/api.config';
 import { isSpaRoute } from './common/utils/request.util';
@@ -15,6 +16,9 @@ config();
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Подключаем cookie-parser для чтения refresh token из httpOnly cookie
+  app.use(cookieParser());
 
   // Настройка CORS для работы с фронтендом
   // В production: разрешаем все origins (так как фронтенд и API на одном домене через ngrok)

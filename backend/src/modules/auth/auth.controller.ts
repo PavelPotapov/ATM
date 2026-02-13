@@ -10,10 +10,13 @@ import {
   Post,
   Get,
   Body,
+  Req,
+  Res,
   HttpCode,
   HttpStatus,
   Logger,
   UseGuards,
+  UnauthorizedException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -22,15 +25,19 @@ import {
   ApiBody,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { AuthService, AuthResponse, RefreshResponse } from './auth.service';
+import type { Request, Response } from 'express';
+import { AuthService } from './auth.service';
+import type { AuthResponse, RefreshResponse } from './auth.service';
 import { PermissionsService } from './services/permissions.service';
 import { LoginDto } from './dto/login.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AuthResponseDto, RefreshResponseDto } from './dto/auth-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../users/types/user.types';
 import { PermissionsList } from './types/permissions.types';
+
+const REFRESH_TOKEN_COOKIE = 'refresh_token';
+const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 дней
 
 /**
  * AuthController - контроллер для аутентификации
@@ -48,17 +55,46 @@ export class AuthController {
   ) {}
 
   /**
+   * Устанавливает refresh token в httpOnly cookie
+   */
+  private setRefreshTokenCookie(res: Response, token: string): void {
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie(REFRESH_TOKEN_COOKIE, token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      path: '/api/v1/auth',
+      maxAge: REFRESH_TOKEN_MAX_AGE,
+    });
+  }
+
+  /**
+   * Очищает refresh token cookie
+   */
+  private clearRefreshTokenCookie(res: Response): void {
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie(REFRESH_TOKEN_COOKIE, '', {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      path: '/api/v1/auth',
+      maxAge: 0,
+    });
+  }
+
+  /**
    * POST /auth/login
    * Вход в систему
    *
    * @param loginDto - email и password
-   * @returns JWT токен и данные пользователя
+   * @returns JWT access token и данные пользователя. Refresh token устанавливается в httpOnly cookie.
    */
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Вход в систему',
-    description: 'Аутентификация пользователя и получение JWT токена',
+    description:
+      'Аутентификация пользователя. Access token возвращается в JSON, refresh token — в httpOnly cookie.',
   })
   @ApiBody({ type: LoginDto })
   @ApiResponse({
@@ -70,13 +106,23 @@ export class AuthController {
     status: 401,
     description: 'Неверный email или пароль',
   })
-  async login(@Body() loginDto: LoginDto): Promise<AuthResponse> {
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponse> {
     this.logger.log(`Попытка входа: ${loginDto.email}`);
     const result = await this.authService.login(loginDto);
-    this.logger.log(
-      `Успешный вход: ${loginDto.email}, токен: ${result.access_token.substring(0, 20)}...`,
-    );
-    return result;
+
+    // Устанавливаем refresh token в httpOnly cookie
+    this.setRefreshTokenCookie(res, result.refresh_token);
+
+    this.logger.log(`Успешный вход: ${loginDto.email}`);
+
+    // Возвращаем только access_token и user (без refresh_token в JSON)
+    return {
+      access_token: result.access_token,
+      user: result.user,
+    };
   }
 
   /**
@@ -87,9 +133,9 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Обновление токена',
-    description: 'Получение нового access token с помощью refresh token',
+    description:
+      'Получение нового access token. Refresh token читается из httpOnly cookie.',
   })
-  @ApiBody({ type: RefreshTokenDto })
   @ApiResponse({
     status: 200,
     description: 'Новый access token успешно получен',
@@ -99,11 +145,15 @@ export class AuthController {
     status: 401,
     description: 'Невалидный или истекший refresh token',
   })
-  async refresh(
-    @Body() refreshTokenDto: RefreshTokenDto,
-  ): Promise<RefreshResponse> {
+  async refresh(@Req() req: Request): Promise<RefreshResponse> {
+    const refreshToken = req.cookies?.[REFRESH_TOKEN_COOKIE];
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token не найден');
+    }
+
     this.logger.log('Попытка обновления токена');
-    return this.authService.refresh(refreshTokenDto.refresh_token);
+    return this.authService.refresh(refreshToken);
   }
 
   /**
@@ -153,9 +203,11 @@ export class AuthController {
   })
   async logout(
     @CurrentUser() user: AuthenticatedUser,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<{ message: string }> {
     this.logger.log(`Выход пользователя: ${user.email}`);
     await this.authService.logout(user.id);
+    this.clearRefreshTokenCookie(res);
     return { message: 'Успешный выход из системы' };
   }
 

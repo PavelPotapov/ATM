@@ -1,121 +1,101 @@
-# Модуль Auth (Аутентификация)
+# Auth Module (Backend)
 
-## Назначение
+Модуль аутентификации и авторизации. Управляет JWT-токенами, сессиями пользователей и ролевыми разрешениями.
 
-Модуль отвечает за аутентификацию пользователей, генерацию и валидацию JWT токенов, а также управление сессиями через refresh token.
+## Контракт модуля
 
-## Публичный API
+### Назначение
 
-### Endpoints
+Обеспечивает полный цикл аутентификации: вход, выход, обновление токенов и проверку разрешений. Access token передаётся в заголовке `Authorization: Bearer <token>`, refresh token — в httpOnly cookie.
 
-- `POST /auth/login` - вход в систему, получение access и refresh токенов
-- `POST /auth/refresh` - обновление access token с помощью refresh token
-- `POST /auth/logout` - выход из системы, удаление refresh token
+### Public API
+
+| Эндпоинт | Метод | Guard | Описание |
+|----------|-------|-------|----------|
+| `/auth/login` | POST | — | Вход: принимает `{email, password}`, возвращает `{access_token, user}`. Refresh token ставится в httpOnly cookie. |
+| `/auth/refresh` | POST | — | Обновление access token. Refresh token читается из cookie. Возвращает `{access_token}`. |
+| `/auth/logout` | POST | JwtAuthGuard | Выход: удаляет refresh token из БД и очищает cookie. |
+| `/auth/me` | GET | JwtAuthGuard | Возвращает данные текущего пользователя. |
+| `/auth/permissions` | GET | JwtAuthGuard | Возвращает список разрешений текущего пользователя по его роли. |
 
 ### Экспортируемые сущности
 
-- `AuthService` - сервис для аутентификации
-- `JwtAuthGuard` - guard для защиты endpoints
-- `@CurrentUser()` - декоратор для получения текущего пользователя
-- `JwtStrategy` - стратегия Passport для проверки JWT токенов
+- `AuthService` — сервис аутентификации
+- `PermissionsService` — маппинг роль → разрешения
+- `JwtAuthGuard` — guard для защиты endpoints
+- `@CurrentUser()` — декоратор для получения пользователя из Request
+- `JwtStrategy` — Passport стратегия для JWT
 
-## Внутреннее устройство
+### Функциональные возможности
 
-### Структура модуля
+- **JWT авторизация**: access token (15 мин) + refresh token (7 дней, httpOnly cookie)
+- **Ролевая модель**: ADMIN, MANAGER, WORKER с определёнными наборами разрешений
+- **Автоматический refresh**: фронтенд при получении 401 автоматически запрашивает новый access token
+- **Безопасное хранение**: refresh token в httpOnly cookie (недоступен из JS), пароли хэшируются bcrypt
+
+### Использование
+
+```typescript
+// Защита эндпоинта
+@UseGuards(JwtAuthGuard)
+@Get('protected')
+handler(@CurrentUser() user: AuthenticatedUser) { ... }
+
+// Проверка разрешений
+const canCreate = permissionsService.hasPermission(user.role, 'workspaces.create');
+```
+
+### Внутренняя структура
 
 ```
 auth/
-├── auth.controller.ts      # HTTP endpoints
-├── auth.service.ts          # Бизнес-логика (login, refresh, logout, validateUser)
-├── auth.module.ts           # Конфигурация модуля
-├── dto/
-│   ├── login.dto.ts         # DTO для входа
-│   ├── refresh-token.dto.ts # DTO для обновления токена
-│   └── auth-response.dto.ts  # DTO для ответов (Swagger)
+├── auth.module.ts              # DI: импорт UsersModule, JwtModule, PassportModule
+├── auth.controller.ts          # Эндпоинты + cookie-логика
+├── auth.service.ts             # Бизнес-логика: login, refresh, logout, validateUser
 ├── guards/
-│   └── jwt-auth.guard.ts    # Guard для защиты endpoints
+│   └── jwt-auth.guard.ts       # JwtAuthGuard — защита маршрутов
 ├── strategies/
-│   └── jwt.strategy.ts      # Passport стратегия для JWT
-└── decorators/
-    └── current-user.decorator.ts # Декоратор @CurrentUser()
+│   └── jwt.strategy.ts         # Passport JWT Strategy — верификация токена
+├── decorators/
+│   └── current-user.decorator.ts  # @CurrentUser() — извлекает user из Request
+├── services/
+│   └── permissions.service.ts  # Маппинг роль → разрешения
+├── dto/
+│   ├── login.dto.ts            # { email, password }
+│   ├── refresh-token.dto.ts    # Legacy (не используется после cookie-миграции)
+│   └── auth-response.dto.ts    # Swagger-описание ответов
+├── types/
+│   └── permissions.types.ts    # Permission, PermissionsList
+└── docs/
+    └── README.md
 ```
 
-### Основные компоненты
+### Зависимости
 
-#### AuthService
+- **Зависит от**: `UsersModule`, `PrismaModule`, `@nestjs/jwt`, `passport-jwt`, `cookie-parser`
+- **Зависят от него**: все защищённые модули (через `JwtAuthGuard`)
 
-- `login(loginDto: LoginDto)` - аутентификация, возвращает access_token (15м) и refresh_token (7д)
-- `refresh(refreshToken: string)` - обновление access token
-- `logout(userId: string)` - удаление refresh token из БД
-- `validateUser(email, password)` - валидация пользователя по email и паролю
+### Cookie-параметры refresh token
 
-#### JwtAuthGuard
-
-- Защищает endpoints, требуя валидный JWT токен
-- Автоматически выбрасывает `UnauthorizedException` (401) при отсутствии/невалидном токене
-- Логирует все попытки доступа
-
-#### JwtStrategy
-
-- Проверяет валидность JWT токена
-- Извлекает payload из токена
-- Проверяет существование пользователя в БД
-- Возвращает данные пользователя для `@CurrentUser()`
+| Параметр | Значение | Описание |
+|----------|----------|----------|
+| httpOnly | true | Недоступен из JavaScript |
+| secure | true (prod) | Только HTTPS |
+| sameSite | lax | Защита от CSRF |
+| path | /api/v1/auth | Отправляется только на auth-эндпоинты |
+| maxAge | 7 дней | Время жизни cookie |
 
 ### Типы
 
-- `JwtPayload` - интерфейс для payload токена (sub, email, role)
-- `AuthResponse` - ответ при успешном login (access_token, refresh_token, user)
-- `RefreshResponse` - ответ при обновлении токена (access_token)
+- `JwtPayload` — payload токена: `{sub, email, role}`
+- `AuthResponse` — ответ login: `{access_token, user}` (без refresh_token)
+- `LoginResult` — внутренний тип: `{access_token, refresh_token, user}` (для контроллера)
+- `RefreshResponse` — ответ refresh: `{access_token}`
+- `AuthenticatedUser` — данные пользователя: `{id, email, firstName, lastName, role}`
 
-## Зависимости
+### Ограничения и TODO
 
-### Внутренние
-
-- `UsersModule` - для получения данных пользователей
-- `PrismaModule` - для работы с БД (сохранение refresh token)
-
-### Внешние
-
-- `@nestjs/jwt` - работа с JWT токенами
-- `@nestjs/passport` - интеграция Passport
-- `passport-jwt` - стратегия для JWT
-- `bcrypt` - хэширование паролей (через UsersService)
-
-## Точки интеграции
-
-### Используется в:
-
-- Все защищенные endpoints (через `@UseGuards(JwtAuthGuard)`)
-- Контроллеры для получения текущего пользователя (через `@CurrentUser()`)
-
-### Использует:
-
-- `UsersService.findByEmail()` - для поиска пользователя при login
-- `PrismaService` - для сохранения/удаления refresh token
-
-## Конфигурация
-
-### Переменные окружения
-
-- `JWT_SECRET` - секретный ключ для подписи токенов (обязательно)
-
-### Настройки токенов
-
-- Access token: 15 минут
-- Refresh token: 7 дней
-- Хранится в БД: refresh token сохраняется в поле `User.refreshToken`
-
-## Безопасность
-
-- Пароли никогда не возвращаются в ответах
-- Refresh token проверяется в БД при обновлении
-- При logout refresh token удаляется из БД
-- Все ошибки возвращают правильные HTTP коды (401 Unauthorized)
-
-## Известные ограничения и TODO
-
-- [ ] Добавить rate limiting для login endpoint
-- [ ] Добавить возможность отзыва всех токенов пользователя
-- [ ] Добавить логирование подозрительной активности
-- [ ] Рассмотреть использование refresh token rotation
+- [ ] Rate limiting на `/auth/login`
+- [ ] Token blacklist для немедленного отзыва (сейчас access token живёт до expiration)
+- [ ] Refresh token rotation (выпуск нового refresh token при каждом refresh)
+- [ ] Логирование подозрительной активности

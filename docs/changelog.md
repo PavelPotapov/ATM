@@ -8,6 +8,38 @@
 - [Обзор модулей Backend](./backend-modules.md)
 - [Документация модулей](./backend-modules.md#модули)
 
+## [2026-02-13] - Рефакторинг аутентификации и безопасности
+
+### Добавлено
+- Refresh token теперь хранится в httpOnly cookie вместо localStorage (защита от XSS)
+- `cookie-parser` middleware в backend (`main.ts`)
+- Cookie-хелперы в `auth.controller.ts` (`setRefreshTokenCookie`, `clearRefreshTokenCookie`)
+- Внутренний тип `LoginResult` в `auth.service.ts` (для передачи refresh token контроллеру)
+- Скрипт `clean` в корневом `package.json` (rimraf для очистки dist)
+- Документация модулей (правило `docs/README.md` для каждого модуля):
+  - `frontend/src/features/authLogin/docs/README.md`
+  - `frontend/src/features/authLogout/docs/README.md`
+  - `frontend/src/shared/api/docs/README.md`
+- CLAUDE.md файлы с правилами для Claude Code (root, backend, frontend)
+
+### Изменено
+- `auth.controller.ts`: login устанавливает refresh token в cookie, refresh читает из cookie, logout очищает cookie
+- `auth.service.ts`: login возвращает `LoginResult` (с refresh token) вместо `AuthResponse`
+- `auth-response.dto.ts`: убран `refresh_token` из Swagger-описания ответа
+- `axiosClient.ts`: добавлен `withCredentials: true`, refresh отправляет пустое тело (cookie идёт автоматически)
+- `jwtTokenStorage.ts`: удалены все функции работы с refresh token
+- `useLogin.ts`: убрано сохранение refresh token в localStorage
+- `auth.dto.ts` (frontend): убран `refresh_token` из `AuthResponse`
+- `useLogout.ts`: рефакторинг — `onSettled` вместо дублирования `onSuccess`/`onError`
+- Обновлена документация `backend/src/modules/auth/docs/README.md`
+
+### Удалено
+- `frontend/src/shared/lib/storage/userStorage.ts` — неиспользуемый файл с FSD-нарушением (shared → features)
+
+### Исправлено
+- Убрано логирование `JWT_SECRET` в консоль (`auth.service.ts`)
+- Устранена XSS-уязвимость: refresh token больше не хранится в localStorage
+
 ## [2025-02-07] - Требования к договору на разработку
 
 ### Добавлено

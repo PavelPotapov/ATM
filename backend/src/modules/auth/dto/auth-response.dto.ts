@@ -14,12 +14,7 @@ export class AuthResponseDto {
   })
   access_token!: string;
 
-  @ApiProperty({
-    description:
-      'JWT refresh token для обновления access token (действителен 7 дней)',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-  })
-  refresh_token!: string;
+  // refresh_token передаётся через httpOnly cookie, не в JSON
 
   @ApiProperty({
     description: 'Данные пользователя',

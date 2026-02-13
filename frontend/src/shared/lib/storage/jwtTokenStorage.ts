@@ -1,11 +1,11 @@
 /**
  * @file: jwtTokenStorage.ts
- * @description: Утилиты для работы с JWT токенами (access и refresh в localStorage)
+ * @description: Утилиты для работы с JWT access token в localStorage.
+ *   Refresh token хранится в httpOnly cookie (управляется бэкендом).
  * @created: 2025-01-XX
  */
 
 const ACCESS_TOKEN_KEY = 'accessToken';
-const REFRESH_TOKEN_KEY = 'refreshToken';
 
 /**
  * Сохраняет access token в localStorage
@@ -36,38 +36,9 @@ export function hasAccessToken(): boolean {
 }
 
 /**
- * Сохраняет refresh token в localStorage
- */
-export function setRefreshToken(token: string): void {
-  localStorage.setItem(REFRESH_TOKEN_KEY, token);
-}
-
-/**
- * Получает refresh token из localStorage
- */
-export function getRefreshToken(): string | null {
-  return localStorage.getItem(REFRESH_TOKEN_KEY);
-}
-
-/**
- * Удаляет refresh token из localStorage
- */
-export function removeRefreshToken(): void {
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
-}
-
-/**
- * Проверяет, есть ли refresh token
- */
-export function hasRefreshToken(): boolean {
-  return getRefreshToken() !== null;
-}
-
-/**
- * Очищает все токены (access и refresh)
+ * Очищает access token.
+ * Refresh token cookie очищается бэкендом при logout.
  */
 export function clearTokens(): void {
   removeAccessToken();
-  removeRefreshToken();
 }
-

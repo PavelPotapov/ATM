@@ -12,7 +12,7 @@ import type { LoginDto, AuthResponse } from '../dto/auth.dto';
 /**
  * Вход в систему
  * @param loginDto - email и password
- * @returns access_token, refresh_token и данные пользователя
+ * @returns access_token и данные пользователя. Refresh token устанавливается в httpOnly cookie.
  */
 export const login = async (loginDto: LoginDto): Promise<AuthResponse> => {
   const response = await apiClient.post<AuthResponse>(

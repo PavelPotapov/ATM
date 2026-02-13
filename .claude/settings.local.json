@@ -8,7 +8,11 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebSearch",
       "Bash(gh api:*)",
-      "Bash(gh search repos:*)"
+      "Bash(gh search repos:*)",
+      "Bash(ls -la \"C:\\\\projects\\\\ATM\\\\frontend\\\\src\\\\shared\\\\api\"\" 2>/dev/null || echo \"Directory not found \")",
+      "Bash(del \"C:\\\\projects\\\\ATM\\\\frontend\\\\src\\\\shared\\\\lib\\\\storage\\\\userStorage.ts\")",
+      "Bash(pnpm add:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

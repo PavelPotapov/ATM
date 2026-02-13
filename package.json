@@ -8,7 +8,8 @@
     "dev:frontend": "cd frontend && pnpm run dev",
     "build:backend": "cd backend && pnpm run build",
     "build:frontend": "cd frontend && pnpm run build",
-    "build": "pnpm run build:backend && pnpm run build:frontend",
+    "clean": "cd backend && rimraf dist",
+    "build": "pnpm run clean && pnpm run build:backend && pnpm run build:frontend",
     "start:backend:prod": "cd backend && cross-env NODE_ENV=production pnpm run start:prod",
     "start:prod": "pnpm run build:backend && pnpm run build:frontend && pnpm run start:backend:prod",
     "docker:up": "docker-compose up -d",
@@ -17,6 +18,7 @@
     "install:all": "pnpm install && cd backend && pnpm install && cd ../frontend && pnpm install"
   },
   "devDependencies": {
-    "cross-env": "^10.1.0"
+    "cross-env": "^10.1.0",
+    "rimraf": "^6.1.2"
   }
 }

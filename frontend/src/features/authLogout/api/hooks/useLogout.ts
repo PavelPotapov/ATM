@@ -21,18 +21,8 @@ export const useLogout = () => {
 
   return useMutation({
     mutationFn: logout,
-    onSuccess: () => {
-      // Очищаем токены
-      clearTokens();
-      // Удаляем данные пользователя из query cache
-      queryClient.removeQueries({ queryKey: authKeys.user.queryKey });
-      // Очищаем весь кеш (опционально, можно очистить только связанные queries)
-      queryClient.clear();
-      // Редирект на страницу логина
-      router.navigate({ to: ROUTES.LOGIN });
-    },
-    onError: () => {
-      // Даже если запрос не удался, очищаем локальные данные
+    onSettled: () => {
+      // Независимо от результата: очищаем токены, кэш и редиректим
       clearTokens();
       queryClient.removeQueries({ queryKey: authKeys.user.queryKey });
       queryClient.clear();
