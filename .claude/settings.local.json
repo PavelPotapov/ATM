@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "WebFetch(domain:skills.sh)",
+      "WebFetch(domain:tanstack.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch",
+      "Bash(gh api:*)",
+      "Bash(gh search repos:*)"
+    ]
+  }
+}

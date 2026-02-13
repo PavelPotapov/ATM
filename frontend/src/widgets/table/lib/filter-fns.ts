@@ -70,3 +70,6 @@ export const arrSome: FilterFn<unknown> = (row, columnId, filterValue) => {
 
 arrSome.autoRemove = (val: unknown) => !Array.isArray(val) || !val?.length;
 
+
+
+

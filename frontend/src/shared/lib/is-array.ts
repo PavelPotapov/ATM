@@ -24,3 +24,6 @@ export function isArrayOfBooleans(arr: unknown): arr is boolean[] {
   return arr.every((item) => typeof item === 'boolean');
 }
 
+
+
+
