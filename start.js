@@ -6,9 +6,11 @@
 
 const { execSync } = require('child_process');
 const path = require('path');
-const { Pool } = require('pg');
 
 const backendDir = path.join(__dirname, 'backend');
+
+// pg installed in backend/node_modules, not root
+const { Pool } = require(path.join(backendDir, 'node_modules', 'pg'));
 
 function run(cmd, label) {
   console.log(`\n▸ ${label}...`);
