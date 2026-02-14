@@ -42,7 +42,7 @@ frontend/build/
 frontend/.env
 
 # Prisma
-backend/prisma/migrations/
+# Миграции ДОЛЖНЫ быть в git — они нужны для prisma migrate deploy на сервере
 
 # Docker
 docker-compose.override.yml

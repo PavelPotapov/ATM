@@ -1,26 +1,18 @@
 /**
- * @file: seed.ts
+ * @file: seed.js
  * @description: Seed-скрипт для создания начальных пользователей (admin, manager, worker)
  * @dependencies: @prisma/client, bcrypt
  * @created: 2026-02-13
  */
 
-import { PrismaClient, Role } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+const { PrismaClient, Role } = require('@prisma/client');
+const bcrypt = require('bcrypt');
 
 const prisma = new PrismaClient();
 
 const SALT_ROUNDS = 10;
 
-interface SeedUser {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  role: Role;
-}
-
-const defaultUsers: SeedUser[] = [
+const defaultUsers = [
   {
     email: 'admin@atm.local',
     password: 'admin123',
@@ -45,7 +37,7 @@ const defaultUsers: SeedUser[] = [
 ];
 
 async function main() {
-  console.log('🌱 Seeding database...');
+  console.log('Seeding database...');
 
   for (const user of defaultUsers) {
     const existing = await prisma.user.findUnique({
@@ -53,7 +45,7 @@ async function main() {
     });
 
     if (existing) {
-      console.log(`  ⏭ User ${user.email} already exists, skipping`);
+      console.log(`  skip: ${user.email} already exists`);
       continue;
     }
 
@@ -69,15 +61,15 @@ async function main() {
       },
     });
 
-    console.log(`  ✅ Created ${user.role}: ${user.email} (password: ${user.password})`);
+    console.log(`  created ${user.role}: ${user.email}`);
   }
 
-  console.log('🌱 Seeding complete!');
+  console.log('Seeding complete!');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Seed failed:', e);
+    console.error('Seed failed:', e);
     process.exit(1);
   })
   .finally(async () => {

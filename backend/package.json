@@ -22,9 +22,6 @@
     "prisma:studio": "pnpm exec prisma studio",
     "prisma:seed": "pnpm exec prisma db seed"
   },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
-  },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
@@ -45,8 +42,6 @@
     "pg": "^8.16.3",
     "prisma": "^7.1.0",
     "reflect-metadata": "^0.2.2",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.7.3",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
@@ -63,6 +58,8 @@
     "@types/pg": "^8.15.6",
     "@types/supertest": "^6.0.2",
     "cross-env": "^10.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
