@@ -8,6 +8,39 @@
 - [Обзор модулей Backend](./backend-modules.md)
 - [Документация модулей](./backend-modules.md#модули)
 
+## [2026-02-14] - Настройка Railway деплоя и CI/CD
+
+### Добавлено
+- **Railway deployment** — настройка автоматического деплоя из GitHub:
+  - `preinstall` скрипт для установки зависимостей в backend/ и frontend/
+  - `start` скрипт для Railway (`node backend/dist/src/main.js`)
+  - `prisma generate` перед `nest build` в пайплайне сборки
+  - `prisma migrate deploy` для автоматического применения миграций
+- **Seed-скрипт** (`backend/prisma/seed.ts`):
+  - Создаёт 3 дефолтных пользователя: admin, manager, worker
+  - Идемпотентный — пропускает существующих пользователей
+  - Запускается автоматически при `pnpm run build`
+- Скрипт `prisma:seed` в `backend/package.json`
+- Конфигурация `prisma.seed` в `backend/package.json`
+- Скрипт `typecheck` во `frontend/package.json` (`tsc -b --noEmit`)
+
+### Изменено
+- `frontend/package.json`: убран `tsc -b` из `build` — Vite собирает через esbuild, typecheck отделён
+- `frontend/tsconfig.app.json`: исключены из typecheck папки `widgets/table`, `features/estimates`, `entities/estimates`, `_reference` (будут рефакториться)
+- `package.json` (корень): обновлён `build` — порядок: `clean → prisma generate → build:backend → build:frontend → migrate deploy → seed`
+
+### Технические детали
+- Railway автоматически определяет `build` и `start` из `package.json`
+- `docker-compose.yml` НЕ используется на Railway — только для локальной разработки
+- DATABASE_URL на Railway: `${{Postgres.DATABASE_URL}}` (internal network)
+
+### Дефолтные пользователи (seed)
+| Email | Пароль | Роль |
+|-------|--------|------|
+| admin@atm.local | admin123 | ADMIN |
+| manager@atm.local | manager123 | MANAGER |
+| worker@atm.local | worker123 | WORKER |
+
 ## [2026-02-13] - Добавлен скилл Motion (анимации) в CLAUDE.md
 
 ### Добавлено

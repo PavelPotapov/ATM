@@ -13,7 +13,9 @@
       "Bash(del \"C:\\\\projects\\\\ATM\\\\frontend\\\\src\\\\shared\\\\lib\\\\storage\\\\userStorage.ts\")",
       "Bash(pnpm add:*)",
       "Bash(npx tsc:*)",
-      "WebFetch(domain:motion.dev)"
+      "WebFetch(domain:motion.dev)",
+      "Bash(npx vite build)",
+      "Bash(pnpm run build:*)"
     ]
   }
 }

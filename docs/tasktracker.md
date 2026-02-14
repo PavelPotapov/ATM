@@ -113,6 +113,34 @@
   - [ ] Настройка Zustand stores
 - **Зависимости**: Backend API должен быть готов
 
+## Задача: Деплой на Railway
+
+- **Статус**: В процессе
+- **Описание**: Настройка автоматического деплоя приложения на Railway из GitHub
+- **Шаги выполнения**:
+  - [x] Создание проекта на Railway из GitHub-репозитория
+  - [x] Добавление PostgreSQL как отдельного сервиса
+  - [x] Настройка `build`, `start`, `preinstall` скриптов
+  - [x] Исправление порядка сборки (prisma generate до nest build)
+  - [x] Отделение typecheck от build (Vite не нуждается в tsc)
+  - [x] Создание seed-скрипта для начальных пользователей
+  - [ ] Настройка переменных окружения (DATABASE_URL, JWT_SECRET, JWT_REFRESH_SECRET, NODE_ENV)
+  - [ ] Успешный деплой и проверка работоспособности
+  - [ ] Проверка логина через дефолтных пользователей
+- **Зависимости**: Все модули backend и frontend
+
+## Задача: Рефакторинг Table Widget
+
+- **Статус**: Не начата
+- **Описание**: Рефакторинг виджета DataTable — текущая реализация взята из reference и адаптирована наспех, содержит TypeScript-ошибки. Папки `widgets/table`, `features/estimates`, `entities/estimates` временно исключены из typecheck.
+- **Шаги выполнения**:
+  - [ ] Ревью текущего кода DataTableEnhanced и связанных компонентов
+  - [ ] Исправление TypeScript-ошибок (30 ошибок: unused vars, type mismatches)
+  - [ ] Рефакторинг в соответствии с FSD-архитектурой
+  - [ ] Возврат `widgets/table`, `features/estimates`, `entities/estimates` в typecheck
+  - [ ] Проверка `pnpm run typecheck` без ошибок
+- **Зависимости**: Нет
+
 ## Задача: Настройка API клиента и TanStack Query
 
 - **Статус**: Завершена
