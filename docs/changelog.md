@@ -8,6 +8,23 @@
 - [Обзор модулей Backend](./backend-modules.md)
 - [Документация модулей](./backend-modules.md#модули)
 
+## [2026-02-13] - Добавлен скилл Motion (анимации) в CLAUDE.md
+
+### Добавлено
+- Секция **Motion (Animations)** в `frontend/CLAUDE.md`:
+  - Установка и импорт (`motion/react`)
+  - Когда использовать Motion vs auto-animate vs Three.js
+  - AnimatePresence (exit-анимации, правила монтирования)
+  - Layout Animations (FLIP, layoutId, shared transitions)
+  - Scroll Animations (whileInView, useScroll, useTransform, parallax)
+  - Gestures (whileHover, whileTap, drag с constraints)
+  - Transitions (spring vs tween, когда что использовать)
+  - Tailwind + Motion интеграция (убирать transition-* классы)
+  - Performance (LazyMotion 4.6 KB, useMotionValue, variants, виртуализация)
+  - Accessibility (MotionConfig reducedMotion)
+  - Known Issues (8 задокументированных проблем)
+  - Anti-Patterns (6 правил)
+
 ## [2026-02-13] - Рефакторинг аутентификации и безопасности
 
 ### Добавлено
