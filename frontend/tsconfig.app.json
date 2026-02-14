@@ -36,9 +36,6 @@
   },
   "include": ["src"],
   "exclude": [
-    "src/widgets/table",
-    "src/features/estimates",
-    "src/entities/estimates",
     "src/_reference"
   ]
 }

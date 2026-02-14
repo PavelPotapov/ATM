@@ -5,7 +5,7 @@
  * @created: 2025-01-04
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import * as React from 'react';
 import { Input } from '@/shared/ui/input';
 import {
@@ -35,9 +35,9 @@ interface EditableCellProps {
  */
 export function EditableCell({
   value,
-  cellId,
-  rowId,
-  columnId,
+  cellId: _cellId,
+  rowId: _rowId,
+  columnId: _columnId,
   dataType,
   canEdit,
   allowedValues,

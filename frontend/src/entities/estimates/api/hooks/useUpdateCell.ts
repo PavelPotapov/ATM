@@ -24,7 +24,6 @@ export const useUpdateCell = () => {
   return useMutation({
     mutationFn: ({
       cellId,
-      estimateId,
       data,
     }: {
       cellId: string;
@@ -60,8 +59,8 @@ export const useUpdateCell = () => {
 
                 const updatedCell: EstimateTableCellDto = {
                   id: cellId === 'new' ? 'temp-' + Date.now() : cellId,
-                  rowId: data.rowId,
-                  columnId: data.columnId,
+                  rowId: data.rowId ?? '',
+                  columnId: data.columnId ?? '',
                   value: data.value ?? null,
                   createdAt: new Date().toISOString(),
                   updatedAt: new Date().toISOString(),
@@ -164,7 +163,7 @@ export const useUpdateCell = () => {
       }
       // Не делаем полный запрос - данные уже обновлены оптимистично
     },
-    onError: (err, variables, context) => {
+    onError: (_err, variables, context) => {
       // Откатываем изменения при ошибке
       if (context?.previousData) {
         queryClient.setQueryData(

@@ -19,7 +19,6 @@ export const useDeleteColumnPermission = () => {
   return useMutation({
     mutationFn: ({
       permissionId,
-      columnId,
     }: {
       permissionId: string;
       columnId: string;

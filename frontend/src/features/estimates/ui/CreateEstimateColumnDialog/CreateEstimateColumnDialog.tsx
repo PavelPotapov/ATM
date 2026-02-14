@@ -79,7 +79,6 @@ export function CreateEstimateColumnDialog({
   });
 
   const dataType = watch('dataType');
-  const allowedValuesString = watch('allowedValuesString');
 
   // Сбрасываем форму при открытии диалога
   useEffect(() => {

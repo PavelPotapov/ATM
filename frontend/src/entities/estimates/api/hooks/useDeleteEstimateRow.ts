@@ -19,7 +19,6 @@ export const useDeleteEstimateRow = () => {
   return useMutation({
     mutationFn: ({
       rowId,
-      estimateId,
     }: {
       rowId: string;
       estimateId: string;

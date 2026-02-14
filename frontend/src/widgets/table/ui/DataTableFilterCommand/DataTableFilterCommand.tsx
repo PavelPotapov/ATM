@@ -21,7 +21,7 @@ import { formatCompactNumber } from '@/shared/lib/utils';
 import { cn } from '@/shared/lib/utils';
 import { LoaderCircle, Search, X } from 'lucide-react';
 import type { ParserBuilder } from 'nuqs';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   columnFiltersParser,
   getFieldOptions,
@@ -77,19 +77,6 @@ export function DataTableFilterCommand({
       const field = _filterFields?.find((field) => field.value === filter.id);
       return !field?.commandDisabled;
     });
-    const currentDisabledFilters = currentFilters.filter((filter) => {
-      const field = _filterFields?.find((field) => field.value === filter.id);
-      return field?.commandDisabled;
-    });
-
-    const commandDisabledFilterKeys = currentDisabledFilters.reduce(
-      (prev, curr) => {
-        prev[curr.id] = curr.value;
-        return prev;
-      },
-      {} as Record<string, unknown>,
-    );
-
     for (const key of Object.keys(searchParams)) {
       const value = searchParams[key as keyof typeof searchParams];
       table.getColumn(key)?.setFilterValue(value);
@@ -231,12 +218,13 @@ export function DataTableFilterCommand({
                   if (!currentWord.includes(`${field.value}:`)) return null;
 
                   const column = table.getColumn(field.value);
+                  const facetedFn = getFacetedUniqueValues?.(table, field.value);
                   const facetedValue =
-                    getFacetedUniqueValues?.(table, field.value) ||
+                    (typeof facetedFn === 'function' ? facetedFn() : null) ??
                     column?.getFacetedUniqueValues();
 
                   const options = getFieldOptions({ field });
-                  const [filter, query] = currentWord.toLowerCase().split(':');
+                  const [, query] = currentWord.toLowerCase().split(':');
 
                   const filteredOptions = options
                     .filter((option) => {

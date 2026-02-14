@@ -1,9 +1,11 @@
 /**
  * @file: seed.js
  * @description: Seed-скрипт для создания начальных пользователей (admin, manager, worker)
- * @dependencies: @prisma/client, @prisma/adapter-pg, pg, bcrypt
+ * @dependencies: @prisma/client, @prisma/adapter-pg, pg, bcrypt, dotenv
  * @created: 2026-02-13
  */
+
+require('dotenv').config();
 
 const { PrismaClient, Role } = require('@prisma/client');
 const { PrismaPg } = require('@prisma/adapter-pg');
@@ -18,24 +20,24 @@ const SALT_ROUNDS = 10;
 
 const defaultUsers = [
   {
-    email: 'admin@atm.local',
-    password: 'admin123',
-    firstName: 'Admin',
-    lastName: 'ATM',
+    email: process.env.SEED_ADMIN_EMAIL,
+    password: process.env.SEED_ADMIN_PASSWORD,
+    firstName: process.env.SEED_ADMIN_FIRST_NAME || 'Admin',
+    lastName: process.env.SEED_ADMIN_LAST_NAME || 'ATM',
     role: Role.ADMIN,
   },
   {
-    email: 'manager@atm.local',
-    password: 'manager123',
-    firstName: 'Manager',
-    lastName: 'ATM',
+    email: process.env.SEED_MANAGER_EMAIL,
+    password: process.env.SEED_MANAGER_PASSWORD,
+    firstName: process.env.SEED_MANAGER_FIRST_NAME || 'Manager',
+    lastName: process.env.SEED_MANAGER_LAST_NAME || 'ATM',
     role: Role.MANAGER,
   },
   {
-    email: 'worker@atm.local',
-    password: 'worker123',
-    firstName: 'Worker',
-    lastName: 'ATM',
+    email: process.env.SEED_WORKER_EMAIL,
+    password: process.env.SEED_WORKER_PASSWORD,
+    firstName: process.env.SEED_WORKER_FIRST_NAME || 'Worker',
+    lastName: process.env.SEED_WORKER_LAST_NAME || 'ATM',
     role: Role.WORKER,
   },
 ];
@@ -44,6 +46,11 @@ async function main() {
   console.log('Seeding database...');
 
   for (const user of defaultUsers) {
+    if (!user.email || !user.password) {
+      console.log(`  skip: ${user.role} — SEED_${user.role}_EMAIL or SEED_${user.role}_PASSWORD not set`);
+      continue;
+    }
+
     const existing = await prisma.user.findUnique({
       where: { email: user.email },
     });

@@ -42,11 +42,8 @@ export function DataTableFilterCheckbox<TData>({
     }
     // Если нет - используем стандартный метод колонки
     const columnFaceted = column?.getFacetedUniqueValues();
-    if (typeof columnFaceted === 'function') {
-      const result = columnFaceted();
-      if (result instanceof Map) {
-        return result;
-      }
+    if (columnFaceted instanceof Map) {
+      return columnFaceted;
     }
     return null;
   }, [table, value, column, getFacetedUniqueValues]);

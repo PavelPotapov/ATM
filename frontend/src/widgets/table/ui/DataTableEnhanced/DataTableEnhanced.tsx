@@ -20,7 +20,6 @@ import {
   getCoreRowModel,
   getFacetedMinMaxValues,
   getFacetedRowModel,
-  getFacetedUniqueValues,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -173,7 +172,7 @@ export function DataTableEnhanced<TData, TValue>({
           rows.forEach((row) => {
             // Получаем значение через accessorFn (который мы настроили в колонках)
             let value: unknown;
-            if (column.columnDef.accessorFn) {
+            if ('accessorFn' in column.columnDef && column.columnDef.accessorFn) {
               try {
                 value = column.columnDef.accessorFn(row.original, row.index);
               } catch {
@@ -181,7 +180,8 @@ export function DataTableEnhanced<TData, TValue>({
               }
             } else {
               // Fallback: пытаемся получить напрямую
-              const cellData = row.original[columnId] as
+              const original = row.original as Record<string, unknown>;
+              const cellData = original[columnId] as
                 | {
                     value: string | null;
                   }
@@ -260,7 +260,9 @@ export function DataTableEnhanced<TData, TValue>({
       pagination={pagination}
       enableColumnOrdering={enableColumnOrdering}
       getFacetedUniqueValues={customGetFacetedUniqueValues}
-      getFacetedMinMaxValues={getFacetedMinMaxValues()}
+      getFacetedMinMaxValues={(table, columnId) =>
+        getFacetedMinMaxValues()(table as TTable<unknown>, columnId)()
+      }
     >
       <div className="space-y-4">
         {/* Тулбар с поиском и опциями */}

@@ -8,6 +8,36 @@
 - [Обзор модулей Backend](./backend-modules.md)
 - [Документация модулей](./backend-modules.md#модули)
 
+## [2026-02-14] - Вынос seed-данных пользователей в .env
+
+### Изменено
+- `backend/prisma/seed.js` — credentials пользователей читаются из env-переменных (`SEED_{ROLE}_EMAIL`, `SEED_{ROLE}_PASSWORD`, `SEED_{ROLE}_FIRST_NAME`, `SEED_{ROLE}_LAST_NAME`)
+- Добавлен `require('dotenv').config()` для загрузки `.env`
+- Guard: если `EMAIL` или `PASSWORD` не заданы — пользователь пропускается с предупреждением
+- `backend/.env.example` — добавлены seed-переменные с placeholder `change-me`
+
+---
+
+## [2026-02-14] - Реабилитация TypeScript type-checking в frontend build
+
+### Исправлено
+- Все TypeScript ошибки (31 шт.) в `widgets/table`, `entities/estimates`, `features/estimates`
+- `ButtonProps` → `React.ComponentProps<typeof Button>` в `DataTableColumnHeader`
+- Неиспользуемые импорты и переменные во всех трёх модулях
+- Типизация `getFacetedUniqueValues` / `getFacetedMinMaxValues` в `DataTableEnhanced`
+- Типизация `row.original` и `column.columnDef.accessorFn`
+- Недостающий проп `rowId` в `EditableCell`
+- `data.columnId` / `data.rowId` (потенциально `undefined`) в `useUpdateCell`
+
+### Добавлено
+- `widgets/table/model/react-table.d.ts` — module augmentation для `@tanstack/react-table` (`ColumnMeta.label`, `TableMeta`, `FilterFns`)
+
+### Изменено
+- `frontend/tsconfig.app.json`: убраны исключения `widgets/table`, `features/estimates`, `entities/estimates` — теперь type-check покрывает весь код (кроме `_reference`)
+- `frontend/package.json`: `build` → `tsc -b --noEmit && vite build` — type-checking включён в production build
+
+---
+
 ## [2026-02-14] - Настройка Railway деплоя и CI/CD
 
 ### Добавлено

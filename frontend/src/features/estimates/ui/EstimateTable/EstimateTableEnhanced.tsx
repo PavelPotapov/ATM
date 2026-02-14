@@ -113,6 +113,7 @@ export function EstimateTableEnhanced({ estimateId }: EstimateTableProps) {
             <EditableCell
               value={cellData.value}
               cellId={cellData.cellId}
+              rowId={(row.original._rowId as string) ?? ''}
               columnId={column.id}
               dataType={column.dataType}
               canEdit={cellData.canEdit}
@@ -141,11 +142,6 @@ export function EstimateTableEnhanced({ estimateId }: EstimateTableProps) {
     if (!data) return [];
 
     return data.columns
-      .filter((col) => {
-        // Пока добавляем только input фильтры для всех колонок
-        // В будущем можно добавить checkbox для ENUM, slider для NUMBER и т.д.
-        return true;
-      })
       .map((col) => ({
         type: 'input' as const,
         label: col.name,
