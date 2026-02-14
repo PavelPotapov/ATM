@@ -11,7 +11,7 @@
     "clean": "cd backend && rimraf dist",
     "preinstall": "cd backend && pnpm install --frozen-lockfile && cd ../frontend && pnpm install --frozen-lockfile",
     "build": "pnpm run clean && cd backend && pnpm exec prisma generate && cd .. && pnpm run build:backend && pnpm run build:frontend",
-    "start": "node start.js",
+    "start": "cd backend && pnpm exec prisma migrate deploy && pnpm exec prisma db seed && NODE_ENV=production node dist/src/main.js",
     "start:backend:prod": "cd backend && cross-env NODE_ENV=production pnpm run start:prod",
     "start:prod": "pnpm run build:backend && pnpm run build:frontend && pnpm run start:backend:prod",
     "docker:up": "docker-compose up -d",
